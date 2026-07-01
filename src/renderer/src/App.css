@@ -1,0 +1,292 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #2f4356;
+  color: #111;
+  overflow: hidden;
+  user-select: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+.app {
+  width: 100%;
+  height: 100vh;
+  background: #2f4356;
+}
+
+.title-strip {
+  height: 26px;
+  background: #f7f7f7;
+  border-bottom: 1px solid #c8c8c8;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 13px;
+  color: #111;
+}
+
+.top-bar {
+  height: 34px;
+  background: #f4f4f4;
+  border-bottom: 1px solid #bdbdbd;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.menu-bar {
+  display: flex;
+  height: 100%;
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-item {
+  position: relative;
+  height: 100%;
+}
+
+.menu-button {
+  height: 100%;
+  border: none;
+  background: transparent;
+  padding: 0 15px;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.menu-button:hover,
+.menu-button:focus-visible {
+  background: #e1e1e1;
+  outline: none;
+}
+
+.dropdown {
+  position: absolute;
+  top: 34px;
+  left: 0;
+  min-width: 220px;
+  background: white;
+  border: 1px solid #9d9d9d;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+  z-index: 100;
+  padding: 4px 0;
+}
+
+.dropdown-item {
+  width: 100%;
+  height: 26px;
+  border: none;
+  background: white;
+  text-align: left;
+  padding: 0 22px;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus-visible {
+  background: #b8def3;
+  outline: none;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  gap: 6px;
+  padding-right: 8px;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.firm-select {
+  width: 230px;
+  height: 25px;
+  border: 1px solid #c8c8c8;
+  background: #fff;
+}
+
+.last-backup {
+  height: 28px;
+  min-width: 180px;
+  background: #d6d2ff;
+  border: 1px solid #c2bfff;
+  font-weight: 600;
+}
+
+.screen-btn,
+.whatsapp-btn {
+  height: 28px;
+  border: 1px solid #c8c8c8;
+  background: #f9f9f9;
+  padding: 0 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.workspace {
+  height: calc(100vh - 92px);
+  position: relative;
+  padding: 8px;
+  background: #2f4356;
+  overflow: hidden;
+}
+
+.quick-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: max-content;
+}
+
+.search-btn {
+  height: 36px;
+  background: #f6a21a;
+  color: white;
+  border: none;
+  padding: 0 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.search-input {
+  width: min(420px, 35vw);
+  min-width: 220px;
+  height: 36px;
+  border: 1px solid #cfcfcf;
+  background: white;
+  font-size: 16px;
+  padding: 0 10px;
+}
+
+.tile {
+  width: 105px;
+  height: 95px;
+  border: 2px solid #1d2d3c;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 14px;
+}
+
+.tile span {
+  height: 38px;
+  font-size: 34px;
+  line-height: 38px;
+}
+
+.tile strong {
+  font-size: 15px;
+}
+
+.tile small {
+  font-size: 13px;
+}
+
+.sale-tile {
+  background: #fcb538;
+}
+
+.purchase-tile {
+  background: #eee0ff;
+}
+
+.backup-tile {
+  background: #fff0a6;
+}
+
+.reminder-tile {
+  background: #edf4ff;
+}
+
+.logo-card {
+  position: absolute;
+  top: 36%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 230px;
+  height: 200px;
+  background: #fffaf0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5d7b7;
+  text-align: center;
+}
+
+.logo-icon {
+  font-size: 42px;
+  line-height: 46px;
+}
+
+.logo-card h1 {
+  margin: 8px 0 2px;
+  letter-spacing: 4px;
+  font-size: 26px;
+}
+
+.logo-card p {
+  margin: 0;
+  color: #8a6c2f;
+  letter-spacing: 2px;
+  font-size: 12px;
+}
+
+.bottom-tabs {
+  height: 32px;
+  background: #0e5f86;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+}
+
+.active-tab {
+  min-width: 130px;
+  height: 27px;
+  background: #54b9ea;
+  border: 1px solid #2779a5;
+  color: #111;
+  font-size: 14px;
+}
+
+@media (max-width: 1000px) {
+  .top-actions {
+    gap: 4px;
+  }
+
+  .firm-select {
+    width: 150px;
+  }
+
+  .last-backup {
+    min-width: 125px;
+  }
+}
