@@ -7,10 +7,10 @@ body,
 #root {
   width: 100%;
   height: 100%;
+  margin: 0;
 }
 
 body {
-  margin: 0;
   font-family: Arial, Helvetica, sans-serif;
   background: #2f4356;
   color: #111;
@@ -29,13 +29,19 @@ button {
 }
 
 .app {
-  width: 100%;
+  width: 100vw;
   height: 100vh;
+  min-width: 1200px;
+  min-height: 700px;
   background: #2f4356;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .title-strip {
   height: 26px;
+  min-height: 26px;
   background: #f7f7f7;
   border-bottom: 1px solid #c8c8c8;
   display: flex;
@@ -43,35 +49,41 @@ button {
   padding: 0 10px;
   font-size: 13px;
   color: #111;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .top-bar {
   height: 34px;
+  min-height: 34px;
   background: #f4f4f4;
   border-bottom: 1px solid #bdbdbd;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-width: 0;
+  flex-shrink: 0;
+  overflow: visible;
 }
 
 .menu-bar {
   display: flex;
+  align-items: center;
   height: 100%;
-  flex: 1;
-  min-width: 0;
+  flex-shrink: 0;
+  min-width: 430px;
 }
 
 .menu-item {
   position: relative;
   height: 100%;
+  flex-shrink: 0;
 }
 
 .menu-button {
   height: 100%;
   border: none;
   background: transparent;
-  padding: 0 15px;
+  padding: 0 14px;
   font-size: 14px;
   cursor: pointer;
   white-space: nowrap;
@@ -87,11 +99,11 @@ button {
   position: absolute;
   top: 34px;
   left: 0;
-  min-width: 220px;
+  min-width: 230px;
   background: white;
   border: 1px solid #9d9d9d;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
-  z-index: 100;
+  z-index: 9999;
   padding: 4px 0;
 }
 
@@ -116,10 +128,17 @@ button {
 .top-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   height: 100%;
   gap: 6px;
   padding-right: 8px;
   font-size: 13px;
+  flex-shrink: 0;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.top-actions label {
   flex-shrink: 0;
 }
 
@@ -128,6 +147,7 @@ button {
   height: 25px;
   border: 1px solid #c8c8c8;
   background: #fff;
+  flex-shrink: 0;
 }
 
 .last-backup {
@@ -136,6 +156,7 @@ button {
   background: #d6d2ff;
   border: 1px solid #c2bfff;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .screen-btn,
@@ -145,11 +166,12 @@ button {
   background: #f9f9f9;
   padding: 0 10px;
   cursor: pointer;
+  flex-shrink: 0;
   white-space: nowrap;
 }
 
 .workspace {
-  height: calc(100vh - 92px);
+  flex: 1;
   position: relative;
   padding: 8px;
   background: #2f4356;
@@ -160,7 +182,8 @@ button {
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  min-width: max-content;
+  flex-wrap: nowrap;
+  min-width: 1050px;
 }
 
 .search-btn {
@@ -171,16 +194,17 @@ button {
   padding: 0 18px;
   font-weight: 700;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .search-input {
-  width: min(420px, 35vw);
-  min-width: 220px;
+  width: 420px;
   height: 36px;
   border: 1px solid #cfcfcf;
   background: white;
   font-size: 16px;
   padding: 0 10px;
+  flex-shrink: 0;
 }
 
 .tile {
@@ -194,6 +218,7 @@ button {
   justify-content: center;
   gap: 3px;
   font-size: 14px;
+  flex-shrink: 0;
 }
 
 .tile span {
@@ -262,10 +287,12 @@ button {
 
 .bottom-tabs {
   height: 32px;
+  min-height: 32px;
   background: #0e5f86;
   display: flex;
   align-items: center;
   padding-left: 8px;
+  flex-shrink: 0;
 }
 
 .active-tab {
@@ -275,18 +302,4 @@ button {
   border: 1px solid #2779a5;
   color: #111;
   font-size: 14px;
-}
-
-@media (max-width: 1000px) {
-  .top-actions {
-    gap: 4px;
-  }
-
-  .firm-select {
-    width: 150px;
-  }
-
-  .last-backup {
-    min-width: 125px;
-  }
 }

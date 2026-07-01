@@ -6,10 +6,13 @@ import icon from '../../resources/icon.png?asset'
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1366,
+    height: 768,
+    minWidth: 1200,
+    minHeight: 700,
     show: false,
     autoHideMenuBar: true,
+    title: 'Jewellery ERP',
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
