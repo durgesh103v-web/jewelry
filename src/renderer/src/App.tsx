@@ -2,6 +2,12 @@ import { useState } from 'react'
 import './App.css'
 import { appMenus } from './config/appMenus'
 import AccountGroupScreen from './modules/master/account-group/AccountGroupScreen'
+import AccountMasterScreen from './modules/master/account-master/AccountMasterScreen'
+import ItemGroupScreen from './modules/master/item-group/ItemGroupScreen'
+import ItemStampScreen from './modules/master/item-stamp/ItemStampScreen'
+import ItemDesignScreen from './modules/master/item-design/ItemDesignScreen'
+import ItemMasterScreen from './modules/master/item-master/ItemMasterScreen'
+import ItemOpeningStockScreen from './modules/master/item-opening-stock/ItemOpeningStockScreen'
 import type { AppMenuChild, WorkspaceTab } from './types/menu'
 
 const dashboardTab: WorkspaceTab = {
@@ -137,6 +143,18 @@ function App(): React.JSX.Element {
           <Dashboard openQuickScreen={openQuickScreen} />
         ) : activeTab.id === 'account-group' ? (
           <AccountGroupScreen onClose={() => closeTab(activeTab.id)} />
+        ) : activeTab.id === 'account-master' ? (
+          <AccountMasterScreen onClose={() => closeTab(activeTab.id)} />
+        ) : activeTab.id === 'item-group' ? (
+          <ItemGroupScreen onClose={() => closeTab(activeTab.id)} />
+        ) : activeTab.id === 'item-stamp' ? (
+          <ItemStampScreen onClose={() => closeTab(activeTab.id)} />
+        ) : activeTab.id === 'item-design' ? (
+          <ItemDesignScreen onClose={() => closeTab(activeTab.id)} />
+        ) : activeTab.id === 'item-master' ? (
+          <ItemMasterScreen onClose={() => closeTab(activeTab.id)} />
+        ) : activeTab.id === 'item-opening-stock' ? (
+          <ItemOpeningStockScreen onClose={() => closeTab(activeTab.id)} />
         ) : (
           <ModulePlaceholder tab={activeTab} onClose={() => closeTab(activeTab.id)} />
         )}

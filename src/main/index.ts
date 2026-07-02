@@ -3,6 +3,12 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { registerAccountGroupIpc } from './ipc/accountGroup.ipc'
+import { registerAccountIpc } from './ipc/account.ipc'
+import { registerItemGroupIpc } from './ipc/itemGroup.ipc'
+import { registerItemStampIpc } from './ipc/itemStamp.ipc'
+import { registerItemDesignIpc } from './ipc/itemDesign.ipc'
+import { registerItemIpc } from './ipc/item.ipc'
+import { registerItemOpeningStockIpc } from './ipc/itemOpeningStock.ipc'
 
 function createWindow(): void {
   // Create the browser window.
@@ -59,6 +65,12 @@ app.whenReady().then(() => {
   ipcMain.on('ping', () => console.log('pong'))
 
   registerAccountGroupIpc()
+  registerAccountIpc()
+  registerItemGroupIpc()
+  registerItemStampIpc()
+  registerItemDesignIpc()
+  registerItemIpc()
+  registerItemOpeningStockIpc()
 
   createWindow()
 

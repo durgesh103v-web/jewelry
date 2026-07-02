@@ -388,6 +388,7 @@ button {
 
 .account-group-window {
   width: 920px;
+  height: 100%;
   background: #f2f6f8;
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
@@ -469,7 +470,8 @@ button {
 .table-panel {
   background: white;
   border: 1px solid #c7d2da;
-  max-height: 320px;
+  flex: 1;
+  min-height: 160px;
   overflow: auto;
 }
 
@@ -768,4 +770,394 @@ button {
   padding: 7px 10px;
   font-size: 12px;
   color: #475569;
+}
+.account-master-screen {
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+}
+
+.account-master-window {
+  width: 1180px;
+  height: 100%;
+  background: #f2f6f8;
+  border: 1px solid #7c9bab;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.account-master-body {
+  padding: 14px;
+}
+
+.account-master-form-panel {
+  background: white;
+  border: 1px solid #c7d2da;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  background: #e9f3f9;
+  border: 1px solid #c7d2da;
+  color: #0d4f7a;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 7px 10px;
+  margin-bottom: 10px;
+}
+
+.account-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px 14px;
+  margin-bottom: 14px;
+}
+
+.balance-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-field label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.form-field input,
+.form-field select {
+  height: 30px;
+  border: 1px solid #bfcbd3;
+  padding: 0 8px;
+  font-size: 14px;
+  background: white;
+}
+
+.active-field input {
+  width: 18px;
+  height: 18px;
+  margin-top: 5px;
+}
+
+.account-button-row {
+  padding-left: 0;
+}
+
+.account-table-panel {
+  min-height: 180px;
+}
+
+.account-table-panel th,
+.account-table-panel td {
+  white-space: nowrap;
+}
+/* ============================= */
+/* Common ERP Module Layout Fix */
+/* ============================= */
+
+.account-group-screen,
+.account-master-screen,
+.item-group-screen,
+.item-stamp-screen,
+.item-design-screen,
+.item-master-screen,
+.module-placeholder {
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.account-group-window,
+.account-master-window,
+.item-group-window,
+.item-stamp-window,
+.item-design-window,
+.item-master-window,
+.module-window {
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.account-group-body,
+.account-master-body,
+.item-group-body,
+.item-stamp-body,
+.item-design-body,
+.item-master-body,
+.module-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.form-panel,
+.account-master-form-panel,
+.item-master-form-panel {
+  flex-shrink: 0;
+}
+
+.list-toolbar {
+  flex-shrink: 0;
+}
+
+.screen-help-text {
+  flex-shrink: 0;
+}
+
+.table-panel {
+  flex: 1;
+  min-height: 140px;
+  overflow: auto;
+}
+
+.table-panel thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.table-panel table {
+  width: 100%;
+}
+
+.account-master-form-panel {
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.account-form-grid {
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.balance-grid {
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.section-title {
+  padding: 6px 10px;
+  margin-bottom: 8px;
+}
+
+.form-field input,
+.form-field select {
+  height: 28px;
+}
+
+.account-button-row {
+  margin-top: 6px;
+}
+.item-group-screen {
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.item-group-window {
+  width: 920px;
+  height: 100%;
+  background: #f2f6f8;
+  border: 1px solid #7c9bab;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.item-group-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 14px;
+}
+.item-stamp-screen {
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.item-stamp-window {
+  width: 920px;
+  height: 100%;
+  background: #f2f6f8;
+  border: 1px solid #7c9bab;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.item-stamp-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 14px;
+}
+.item-design-screen {
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.item-design-window {
+  width: 920px;
+  height: 100%;
+  background: #f2f6f8;
+  border: 1px solid #7c9bab;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.item-design-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 14px;
+}
+.item-master-screen {
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.item-master-window {
+  width: 1180px;
+  height: 100%;
+  background: #f2f6f8;
+  border: 1px solid #7c9bab;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.item-master-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 14px;
+}
+
+.item-master-form-panel {
+  background: white;
+  border: 1px solid #c7d2da;
+  padding: 12px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.item-master-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px 10px;
+  margin-bottom: 12px;
+}
+
+.item-master-button-row {
+  padding-left: 0;
+  margin-top: 6px;
+}
+
+.item-master-table-panel {
+  min-height: 170px;
+}
+
+.item-master-table-panel th,
+.item-master-table-panel td {
+  white-space: nowrap;
+}
+
+.item-opening-stock-screen {
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.item-opening-stock-window {
+  width: 1180px;
+  height: 100%;
+  background: #f2f6f8;
+  border: 1px solid #7c9bab;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.item-opening-stock-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 14px;
+}
+
+.opening-stock-form-panel {
+  background: white;
+  border: 1px solid #c7d2da;
+  padding: 12px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.opening-stock-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px 10px;
+  margin-bottom: 12px;
+}
+
+.opening-stock-button-row {
+  padding-left: 0;
+  margin-top: 6px;
+}
+
+.opening-stock-table-panel {
+  min-height: 170px;
+}
+
+.opening-stock-table-panel th,
+.opening-stock-table-panel td {
+  white-space: nowrap;
+}
+
+.readonly-field input:disabled,
+.form-field input:disabled {
+  background: #edf2f7;
+  color: #0f172a;
+  font-weight: 700;
 }
