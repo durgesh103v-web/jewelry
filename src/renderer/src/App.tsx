@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import { appMenus } from './config/appMenus'
+import AccountGroupScreen from './modules/master/account-group/AccountGroupScreen'
 import type { AppMenuChild, WorkspaceTab } from './types/menu'
 
 const dashboardTab: WorkspaceTab = {
@@ -134,8 +135,10 @@ function App(): React.JSX.Element {
       <main className="workspace">
         {activeTab.id === 'dashboard' ? (
           <Dashboard openQuickScreen={openQuickScreen} />
+        ) : activeTab.id === 'account-group' ? (
+          <AccountGroupScreen onClose={() => closeTab(activeTab.id)} />
         ) : (
-          <ModulePlaceholder tab={activeTab} />
+          <ModulePlaceholder tab={activeTab} onClose={() => closeTab(activeTab.id)} />
         )}
       </main>
 
@@ -229,13 +232,25 @@ function Dashboard({
   )
 }
 
-function ModulePlaceholder({ tab }: { tab: WorkspaceTab }): React.JSX.Element {
+function ModulePlaceholder({
+  tab,
+  onClose
+}: {
+  tab: WorkspaceTab
+  onClose: () => void
+}): React.JSX.Element {
   return (
     <section className="module-placeholder">
       <div className="module-window">
         <div className="module-title-bar">
           <span>{tab.label}</span>
-          <span>Module: {tab.module}</span>
+
+          <div className="module-title-actions">
+            <span>Module: {tab.module}</span>
+            <button className="module-close-btn" type="button" onClick={onClose}>
+              &times;
+            </button>
+          </div>
         </div>
 
         <div className="module-body">
