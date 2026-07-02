@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 import AppAlert from '../../../components/ui/AppAlert'
 import AppConfirmDialog from '../../../components/ui/AppConfirmDialog'
 import { getFriendlyErrorMessage } from '../../../utils/getFriendlyErrorMessage'
@@ -30,10 +31,40 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
   const [deleteTarget, setDeleteTarget] = useState<AccountGroup | null>(null)
   const [alertMessage, setAlertMessage] = useState('')
   const [alertType, setAlertType] = useState<AlertType>('success')
+  const [searchText, setSearchText] = useState('')
 
   const alertTimerRef = useRef<number | null>(null)
+  const groupNameInputRef = useRef<HTMLInputElement | null>(null)
+  const groupTypeSelectRef = useRef<HTMLSelectElement | null>(null)
+  const descriptionInputRef = useRef<HTMLInputElement | null>(null)
+  const activeCheckboxRef = useRef<HTMLInputElement | null>(null)
 
-  const showAlert = (type: AlertType, message: string): void => {
+  const filteredGroups = useMemo(() => {
+    const keyword = searchText.trim().toLowerCase()
+
+    if (!keyword) return groups
+
+    return groups.filter((group) => {
+      return (
+        group.groupName.toLowerCase().includes(keyword) ||
+        group.groupType.toLowerCase().includes(keyword) ||
+        group.description.toLowerCase().includes(keyword) ||
+        (group.active ? 'yes' : 'no').includes(keyword)
+      )
+    })
+  }, [groups, searchText])
+
+  const activeCount = useMemo(() => {
+    return groups.filter((group) => group.active).length
+  }, [groups])
+
+  const focusGroupName = useCallback((): void => {
+    window.setTimeout(() => {
+      groupNameInputRef.current?.focus()
+    }, 0)
+  }, [])
+
+  const showAlert = useCallback((type: AlertType, message: string): void => {
     setAlertType(type)
     setAlertMessage(message)
 
@@ -44,17 +75,9 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
     alertTimerRef.current = window.setTimeout(() => {
       setAlertMessage('')
     }, 3000)
-  }
-
-  useEffect(() => {
-    return () => {
-      if (alertTimerRef.current) {
-        window.clearTimeout(alertTimerRef.current)
-      }
-    }
   }, [])
 
-  const loadGroups = async (): Promise<void> => {
+  const loadGroups = useCallback(async (): Promise<void> => {
     try {
       setLoading(true)
       const data = await window.api.accountGroups.list()
@@ -64,31 +87,31 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
     } finally {
       setLoading(false)
     }
+  }, [showAlert])
+
+  const handleNew = useCallback((): void => {
+    setEditingId(null)
+    setAlertMessage('')
+    setForm(initialForm)
+    focusGroupName()
+  }, [focusGroupName])
+
+  const focusNextOnEnter = (
+    event: ReactKeyboardEvent<HTMLInputElement | HTMLSelectElement>,
+    nextElement?: HTMLElement | null
+  ): void => {
+    if (event.key !== 'Enter') return
+
+    event.preventDefault()
+    nextElement?.focus()
   }
 
-  useEffect(() => {
-    let cancelled = false
+  const handleSave = useCallback(async (): Promise<void> => {
+    if (saving) return
 
-    window.api.accountGroups
-      .list()
-      .then((data) => {
-        if (!cancelled) setGroups(data)
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) showAlert('error', getFriendlyErrorMessage(error))
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  const handleSave = async (): Promise<void> => {
     if (!form.groupName.trim()) {
       showAlert('warning', 'Please enter group name.')
+      groupNameInputRef.current?.focus()
       return
     }
 
@@ -109,12 +132,13 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
       setForm(initialForm)
       await loadGroups()
       showAlert('success', successMessage)
+      focusGroupName()
     } catch (error) {
       showAlert('error', getFriendlyErrorMessage(error))
     } finally {
       setSaving(false)
     }
-  }
+  }, [editingId, focusGroupName, form, loadGroups, saving, showAlert])
 
   const handleEdit = (group: AccountGroup): void => {
     setEditingId(group.id)
@@ -125,6 +149,7 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
       description: group.description,
       active: group.active
     })
+    focusGroupName()
   }
 
   const requestDelete = (group: AccountGroup): void => {
@@ -154,16 +179,67 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
     }
   }
 
-  const handleCancelDelete = (): void => {
+  const handleCancelDelete = useCallback((): void => {
     if (deleting) return
     setDeleteTarget(null)
-  }
+  }, [deleting])
 
-  const handleNew = (): void => {
-    setEditingId(null)
-    setAlertMessage('')
-    setForm(initialForm)
-  }
+  useEffect(() => {
+    let cancelled = false
+
+    window.api.accountGroups
+      .list()
+      .then((data) => {
+        if (!cancelled) setGroups(data)
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) showAlert('error', getFriendlyErrorMessage(error))
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    focusGroupName()
+
+    return () => {
+      cancelled = true
+
+      if (alertTimerRef.current) {
+        window.clearTimeout(alertTimerRef.current)
+      }
+    }
+  }, [focusGroupName, showAlert])
+
+  useEffect(() => {
+    const handleKeyboard = (event: KeyboardEvent): void => {
+      if (event.ctrlKey && event.key.toLowerCase() === 'n') {
+        event.preventDefault()
+        handleNew()
+      }
+
+      if (event.ctrlKey && event.key.toLowerCase() === 's') {
+        event.preventDefault()
+        void handleSave()
+      }
+
+      if (event.key === 'Escape') {
+        if (deleteTarget) {
+          handleCancelDelete()
+          return
+        }
+
+        if (editingId) {
+          handleNew()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyboard)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyboard)
+    }
+  }, [deleteTarget, editingId, handleCancelDelete, handleNew, handleSave])
 
   return (
     <div className="account-group-screen">
@@ -185,6 +261,7 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
 
               <input
                 id="account-group-name"
+                ref={groupNameInputRef}
                 value={form.groupName}
                 onChange={(event) =>
                   setForm((current) => ({
@@ -192,6 +269,7 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
                     groupName: event.target.value
                   }))
                 }
+                onKeyDown={(event) => focusNextOnEnter(event, groupTypeSelectRef.current)}
                 placeholder="Enter account group name"
               />
             </div>
@@ -201,6 +279,7 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
 
               <select
                 id="account-group-type"
+                ref={groupTypeSelectRef}
                 value={form.groupType}
                 onChange={(event) =>
                   setForm((current) => ({
@@ -208,6 +287,7 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
                     groupType: event.target.value
                   }))
                 }
+                onKeyDown={(event) => focusNextOnEnter(event, descriptionInputRef.current)}
               >
                 <option>Customer</option>
                 <option>Supplier</option>
@@ -223,6 +303,7 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
 
               <input
                 id="account-group-description"
+                ref={descriptionInputRef}
                 value={form.description}
                 onChange={(event) =>
                   setForm((current) => ({
@@ -230,6 +311,7 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
                     description: event.target.value
                   }))
                 }
+                onKeyDown={(event) => focusNextOnEnter(event, activeCheckboxRef.current)}
                 placeholder="Optional description"
               />
             </div>
@@ -239,6 +321,7 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
 
               <input
                 id="account-group-active"
+                ref={activeCheckboxRef}
                 type="checkbox"
                 checked={form.active}
                 onChange={(event) =>
@@ -247,6 +330,12 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
                     active: event.target.checked
                   }))
                 }
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    void handleSave()
+                  }
+                }}
               />
             </div>
 
@@ -277,6 +366,32 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
             </div>
           </div>
 
+          <div className="list-toolbar">
+            <div className="list-search">
+              <label htmlFor="account-group-search">Search</label>
+              <input
+                id="account-group-search"
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+                placeholder="Search by group name, type, description"
+              />
+              {searchText && (
+                <button
+                  className="search-clear-btn"
+                  type="button"
+                  onClick={() => setSearchText('')}
+                >
+                  &times;
+                </button>
+              )}
+            </div>
+
+            <div className="record-summary">
+              Total: <strong>{groups.length}</strong> | Active: <strong>{activeCount}</strong> |
+              Showing: <strong>{filteredGroups.length}</strong>
+            </div>
+          </div>
+
           <div className="table-panel">
             <table>
               <thead>
@@ -297,20 +412,30 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
                       Loading account groups...
                     </td>
                   </tr>
-                ) : groups.length === 0 ? (
+                ) : filteredGroups.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="empty-row">
-                      No account group added yet.
+                      {searchText
+                        ? 'No matching account group found.'
+                        : 'No account group added yet.'}
                     </td>
                   </tr>
                 ) : (
-                  groups.map((group, index) => (
-                    <tr key={group.id}>
+                  filteredGroups.map((group, index) => (
+                    <tr
+                      key={group.id}
+                      className={editingId === group.id ? 'selected-row' : ''}
+                      onDoubleClick={() => handleEdit(group)}
+                    >
                       <td>{index + 1}</td>
                       <td>{group.groupName}</td>
                       <td>{group.groupType}</td>
                       <td>{group.description || '-'}</td>
-                      <td>{group.active ? 'Yes' : 'No'}</td>
+                      <td>
+                        <span className={group.active ? 'status-active' : 'status-inactive'}>
+                          {group.active ? 'Yes' : 'No'}
+                        </span>
+                      </td>
                       <td>
                         <button
                           className="table-edit"
@@ -333,6 +458,10 @@ function AccountGroupScreen({ onClose }: { onClose: () => void }): React.JSX.Ele
                 )}
               </tbody>
             </table>
+          </div>
+
+          <div className="screen-help-text">
+            Tip: Double-click a row to edit. Press Enter to move through the form.
           </div>
         </div>
       </div>
