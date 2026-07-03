@@ -263,6 +263,97 @@ type AccountBalanceReportRecord = {
   anamat: number
   bank: number
 }
+
+type AccountLedgerDetailsRecord = {
+  account: {
+    id: string
+    accountName: string
+    otherName: string
+    mobileNumber: string
+    city: string
+    groupName: string
+  }
+  openingBalance: {
+    goldFine: number
+    silverFine: number
+    cash: number
+    anamat: number
+    bank: number
+  }
+  rows: Array<{
+    id: string
+    srNo: number
+    sourceType: string
+    sourceId: string
+    saleNo: string
+    entryDate: string
+    metalType: string
+    fineJama: number
+    fineNave: number
+    cashJama: number
+    cashNave: number
+    bankJama: number
+    bankNave: number
+    anamatJama: number
+    anamatNave: number
+    narration: string
+    runningGoldFine: number
+    runningSilverFine: number
+    runningCash: number
+    runningBank: number
+    runningAnamat: number
+  }>
+  closingBalance: {
+    goldFine: number
+    silverFine: number
+    cash: number
+    anamat: number
+    bank: number
+  }
+}
+
+type ItemStockReportRecord = {
+  itemId: string
+  itemName: string
+  metalType: string
+  groupName: string
+  stampId: string
+  stampName: string
+  designId: string
+  designName: string
+  pcs: number
+  grossWeight: number
+  netWeight: number
+  fine: number
+}
+
+type ItemTransactionReportRecord = {
+  id: string
+  sourceType: string
+  sourceId: string
+  entryDate: string
+  metalType: string
+  pcsDelta: number
+  grossWeightDelta: number
+  netWeightDelta: number
+  fineDelta: number
+  narration: string
+  createdAt: string
+  itemId: string
+  itemName: string
+  groupName: string
+  stampName: string
+  designName: string
+  saleNo: string
+}
+
+type BackupResult = {
+  success: boolean
+  cancelled: boolean
+  fileName?: string
+  backupPath?: string
+  message: string
+}
 type AccountPayload = {
   accountName: string
   otherName: string
@@ -351,6 +442,14 @@ interface Window {
 
     reports: {
       accountBalance: () => Promise<AccountBalanceReportRecord[]>
+      accountLedgerDetails: (accountId: string) => Promise<AccountLedgerDetailsRecord>
+      itemStock: () => Promise<ItemStockReportRecord[]>
+      itemTransactions: () => Promise<ItemTransactionReportRecord[]>
+    }
+
+    backup: {
+      create: () => Promise<BackupResult>
+      restore: () => Promise<BackupResult>
     }
   }
 }

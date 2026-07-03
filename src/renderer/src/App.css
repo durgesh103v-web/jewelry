@@ -1761,3 +1761,316 @@ button {
 .account-balance-table-panel td {
   white-space: nowrap;
 }
+
+.accountwise-details-screen {
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.accountwise-details-window {
+  width: 1180px;
+  height: 100%;
+  background: #f2f6f8;
+  border: 1px solid #7c9bab;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.accountwise-details-body {
+  flex: 1;
+  min-height: 0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.accountwise-details-toolbar {
+  background: white;
+  border: 1px solid #c7d2da;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 330px 1fr 90px;
+  gap: 10px;
+  align-items: end;
+  flex-shrink: 0;
+  margin-bottom: 10px;
+}
+
+.accountwise-details-toolbar .btn-new {
+  height: 30px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.accountwise-account-card {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.accountwise-account-card div {
+  background: #ffffff;
+  border: 1px solid #c7d2da;
+  padding: 8px 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.accountwise-account-card span {
+  color: #52606d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.accountwise-account-card strong {
+  color: #0f172a;
+  font-size: 13px;
+  text-align: right;
+}
+
+.accountwise-balance-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.accountwise-balance-box {
+  background: white;
+  border: 1px solid #c7d2da;
+  display: grid;
+  grid-template-columns: 120px repeat(5, 1fr);
+  align-items: center;
+}
+
+.accountwise-balance-title {
+  background: #0d4f7a;
+  color: white;
+  font-weight: 800;
+  padding: 8px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.accountwise-balance-box div:not(.accountwise-balance-title) {
+  padding: 7px 8px;
+  border-left: 1px solid #e1e8ee;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.accountwise-balance-box span {
+  font-size: 11px;
+  color: #52606d;
+  font-weight: 700;
+}
+
+.accountwise-balance-box strong {
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.accountwise-details-table-panel {
+  flex: 1;
+  min-height: 180px;
+  overflow: auto;
+}
+
+.accountwise-details-table-panel th,
+.accountwise-details-table-panel td {
+  white-space: nowrap;
+}
+
+.item-stock-report-screen {
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.item-stock-report-window {
+  width: 1180px;
+  height: 100%;
+  background: #f2f6f8;
+  border: 1px solid #7c9bab;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.item-stock-report-body {
+  flex: 1;
+  min-height: 0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.item-stock-toolbar {
+  background: white;
+  border: 1px solid #c7d2da;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 130px 1fr 90px 230px;
+  gap: 10px;
+  align-items: end;
+  flex-shrink: 0;
+  margin-bottom: 10px;
+}
+
+.item-stock-toolbar .btn-new {
+  height: 30px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.item-stock-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.item-stock-summary div {
+  background: #ffffff;
+  border: 1px solid #c7d2da;
+  padding: 9px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item-stock-summary span {
+  color: #52606d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.item-stock-summary strong {
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.item-stock-table-panel {
+  flex: 1;
+  min-height: 180px;
+  overflow: auto;
+}
+
+.item-stock-table-panel th,
+.item-stock-table-panel td {
+  white-space: nowrap;
+}
+
+.item-transaction-report-screen {
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.item-transaction-report-window {
+  width: 1180px;
+  height: 100%;
+  background: #f2f6f8;
+  border: 1px solid #7c9bab;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.item-transaction-report-body {
+  flex: 1;
+  min-height: 0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.item-transaction-toolbar {
+  background: white;
+  border: 1px solid #c7d2da;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 120px 150px 1fr 90px;
+  gap: 10px;
+  align-items: end;
+  flex-shrink: 0;
+  margin-bottom: 10px;
+}
+
+.item-transaction-toolbar .btn-new {
+  height: 30px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.item-transaction-summary {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.item-transaction-summary div {
+  background: #ffffff;
+  border: 1px solid #c7d2da;
+  padding: 9px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item-transaction-summary span {
+  color: #52606d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.item-transaction-summary strong {
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.item-transaction-table-panel {
+  flex: 1;
+  min-height: 180px;
+  overflow: auto;
+}
+
+.item-transaction-table-panel th,
+.item-transaction-table-panel td {
+  white-space: nowrap;
+}
+.positive-value {
+  color: #047857;
+  font-weight: 700;
+}
+
+.negative-value {
+  color: #b91c1c;
+  font-weight: 700;
+}

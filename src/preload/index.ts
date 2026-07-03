@@ -211,6 +211,97 @@ type AccountBalanceReportRecord = {
   anamat: number
   bank: number
 }
+
+type AccountLedgerDetailsRecord = {
+  account: {
+    id: string
+    accountName: string
+    otherName: string
+    mobileNumber: string
+    city: string
+    groupName: string
+  }
+  openingBalance: {
+    goldFine: number
+    silverFine: number
+    cash: number
+    anamat: number
+    bank: number
+  }
+  rows: Array<{
+    id: string
+    srNo: number
+    sourceType: string
+    sourceId: string
+    saleNo: string
+    entryDate: string
+    metalType: string
+    fineJama: number
+    fineNave: number
+    cashJama: number
+    cashNave: number
+    bankJama: number
+    bankNave: number
+    anamatJama: number
+    anamatNave: number
+    narration: string
+    runningGoldFine: number
+    runningSilverFine: number
+    runningCash: number
+    runningBank: number
+    runningAnamat: number
+  }>
+  closingBalance: {
+    goldFine: number
+    silverFine: number
+    cash: number
+    anamat: number
+    bank: number
+  }
+}
+
+type ItemStockReportRecord = {
+  itemId: string
+  itemName: string
+  metalType: string
+  groupName: string
+  stampId: string
+  stampName: string
+  designId: string
+  designName: string
+  pcs: number
+  grossWeight: number
+  netWeight: number
+  fine: number
+}
+
+type ItemTransactionReportRecord = {
+  id: string
+  sourceType: string
+  sourceId: string
+  entryDate: string
+  metalType: string
+  pcsDelta: number
+  grossWeightDelta: number
+  netWeightDelta: number
+  fineDelta: number
+  narration: string
+  createdAt: string
+  itemId: string
+  itemName: string
+  groupName: string
+  stampName: string
+  designName: string
+  saleNo: string
+}
+
+type BackupResult = {
+  success: boolean
+  cancelled: boolean
+  fileName?: string
+  backupPath?: string
+  message: string
+}
 type AccountPayload = {
   accountName: string
   otherName: string
@@ -326,7 +417,20 @@ const api = {
 
   reports: {
     accountBalance: (): Promise<AccountBalanceReportRecord[]> =>
-      ipcRenderer.invoke('reports:account-balance')
+      ipcRenderer.invoke('reports:account-balance'),
+
+    accountLedgerDetails: (accountId: string): Promise<AccountLedgerDetailsRecord> =>
+      ipcRenderer.invoke('reports:account-ledger-details', accountId),
+
+    itemStock: (): Promise<ItemStockReportRecord[]> => ipcRenderer.invoke('reports:item-stock'),
+
+    itemTransactions: (): Promise<ItemTransactionReportRecord[]> =>
+      ipcRenderer.invoke('reports:item-transactions')
+  },
+
+  backup: {
+    create: (): Promise<BackupResult> => ipcRenderer.invoke('backup:create'),
+    restore: (): Promise<BackupResult> => ipcRenderer.invoke('backup:restore')
   }
 }
 

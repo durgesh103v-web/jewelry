@@ -11,6 +11,7 @@ import { registerItemIpc } from './ipc/item.ipc'
 import { registerItemOpeningStockIpc } from './ipc/itemOpeningStock.ipc'
 import { registerSaleIpc } from './ipc/sale.ipc'
 import { registerReportIpc } from './ipc/report.ipc'
+import { registerBackupIpc } from './ipc/backup.ipc'
 
 function createWindow(): void {
   // Create the browser window.
@@ -75,6 +76,7 @@ app.whenReady().then(() => {
   registerItemOpeningStockIpc()
   registerSaleIpc()
   registerReportIpc()
+  registerBackupIpc()
 
   createWindow()
 

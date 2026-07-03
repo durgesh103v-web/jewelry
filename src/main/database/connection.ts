@@ -325,16 +325,26 @@ function runMigrations(database: Database.Database): void {
   addColumnIfMissing(database, 'items', 'labour_rate_type', "TEXT NOT NULL DEFAULT 'Kg'")
 }
 
-export function getDatabase(): Database.Database {
-  if (db) return db
-
+export function getDatabasePath(): string {
   const dataDir = join(app.getPath('userData'), 'data')
 
   if (!existsSync(dataDir)) {
     mkdirSync(dataDir, { recursive: true })
   }
 
-  const dbPath = join(dataDir, 'jewellery-erp.db')
+  return join(dataDir, 'jewellery-erp.db')
+}
+
+export function closeDatabase(): void {
+  if (db) {
+    db.close()
+    db = null
+  }
+}
+export function getDatabase(): Database.Database {
+  if (db) return db
+
+  const dbPath = getDatabasePath()
 
   db = new Database(dbPath)
   runMigrations(db)
