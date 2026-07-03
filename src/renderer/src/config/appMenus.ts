@@ -52,6 +52,7 @@ export const appMenus: AppMenu[] = [
       { id: 'fine-rojmel', label: 'Fine Rojmel', module: 'reports' },
       { id: 'dar-rojmel', label: 'Dar Rojmel', module: 'reports' },
       { id: 'account-balance', label: 'Account Balance', module: 'reports' },
+      { id: 'sale-register', label: 'Sale Register', module: 'reports' },
       { id: 'accountwise-summary', label: 'Accountwise Summary', module: 'reports' },
       { id: 'account-wise-sale-purchase', label: 'Account Wise Sale Purchase', module: 'reports' },
       { id: 'accountwise-details', label: 'Accountwise Details', module: 'reports' },

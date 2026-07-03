@@ -46,6 +46,10 @@ type Item = {
   salePurchaseBy: string
   gstHsnCode: string
   fixedWeightPerPcs: number
+  defaultTanch: number
+  defaultWastage: number
+  defaultLabourRate: number
+  labourRateType: string
   active: boolean
 }
 
@@ -61,6 +65,10 @@ const initialForm = {
   salePurchaseBy: 'Weight',
   gstHsnCode: '',
   fixedWeightPerPcs: '',
+  defaultTanch: '',
+  defaultWastage: '',
+  defaultLabourRate: '',
+  labourRateType: 'Kg',
   active: true
 }
 
@@ -73,6 +81,14 @@ function toNumber(value: string | number): number {
 
 function isValidAmountInput(value: string): boolean {
   return /^\d*\.?\d*$/.test(value)
+}
+
+function formatOptionalNumber(value: number): string {
+  return value === 0 ? '' : String(value)
+}
+
+function calculateHishob(tunch: number, wastage: number): number {
+  return Number((tunch + wastage).toFixed(3))
 }
 
 function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
@@ -101,7 +117,11 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
   const labourChargesSelectRef = useRef<HTMLSelectElement | null>(null)
   const salePurchaseSelectRef = useRef<HTMLSelectElement | null>(null)
   const hsnInputRef = useRef<HTMLInputElement | null>(null)
-  const fixedWeightInputRef = useRef<HTMLInputElement | null>(null)
+  const packWeightInputRef = useRef<HTMLInputElement | null>(null)
+  const tanchInputRef = useRef<HTMLInputElement | null>(null)
+  const wastageInputRef = useRef<HTMLInputElement | null>(null)
+  const labourRateInputRef = useRef<HTMLInputElement | null>(null)
+  const labourRateTypeSelectRef = useRef<HTMLSelectElement | null>(null)
   const activeCheckboxRef = useRef<HTMLInputElement | null>(null)
 
   const activeGroups = useMemo(() => {
@@ -130,7 +150,8 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
         item.designName.toLowerCase().includes(keyword) ||
         item.gstHsnCode.toLowerCase().includes(keyword) ||
         item.labourChargesBy.toLowerCase().includes(keyword) ||
-        item.salePurchaseBy.toLowerCase().includes(keyword)
+        item.salePurchaseBy.toLowerCase().includes(keyword) ||
+        item.labourRateType.toLowerCase().includes(keyword)
       )
     })
   }, [items, searchText])
@@ -245,6 +266,10 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
         salePurchaseBy: form.salePurchaseBy,
         gstHsnCode: form.gstHsnCode.trim(),
         fixedWeightPerPcs: toNumber(form.fixedWeightPerPcs),
+        defaultTanch: toNumber(form.defaultTanch),
+        defaultWastage: toNumber(form.defaultWastage),
+        defaultLabourRate: toNumber(form.defaultLabourRate),
+        labourRateType: form.labourRateType,
         active: form.active
       }
 
@@ -281,6 +306,10 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
       salePurchaseBy: item.salePurchaseBy,
       gstHsnCode: item.gstHsnCode,
       fixedWeightPerPcs: item.fixedWeightPerPcs === 0 ? '' : String(item.fixedWeightPerPcs),
+      defaultTanch: item.defaultTanch === 0 ? '' : String(item.defaultTanch),
+      defaultWastage: item.defaultWastage === 0 ? '' : String(item.defaultWastage),
+      defaultLabourRate: item.defaultLabourRate === 0 ? '' : String(item.defaultLabourRate),
+      labourRateType: item.labourRateType || 'Kg',
       active: item.active
     })
     focusItemName()
@@ -529,10 +558,133 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
                   onKeyDown={(event) => {
                     if (event.key === 'Enter') {
                       event.preventDefault()
-                      barcodeTypeSelectRef.current?.focus()
+                      packWeightInputRef.current?.focus()
                     }
                   }}
                 />
+              </div>
+            </div>
+
+            <div className="section-title">Sale Calculation Defaults</div>
+
+            <div className="item-master-grid">
+              <div className="form-field">
+                <label htmlFor="item-master-pack-weight">Product / Pack Wt.</label>
+                <input
+                  id="item-master-pack-weight"
+                  ref={packWeightInputRef}
+                  type="text"
+                  inputMode="decimal"
+                  value={form.fixedWeightPerPcs}
+                  onChange={(event) => {
+                    const value = event.target.value
+
+                    if (isValidAmountInput(value)) {
+                      setForm((current) => ({
+                        ...current,
+                        fixedWeightPerPcs: value
+                      }))
+                    }
+                  }}
+                  onKeyDown={(event) => focusNextOnEnter(event, tanchInputRef.current)}
+                  placeholder="0"
+                />
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="item-master-default-tanch">Default Tunch</label>
+                <input
+                  id="item-master-default-tanch"
+                  ref={tanchInputRef}
+                  type="text"
+                  inputMode="decimal"
+                  value={form.defaultTanch}
+                  onChange={(event) => {
+                    const value = event.target.value
+
+                    if (isValidAmountInput(value)) {
+                      setForm((current) => ({
+                        ...current,
+                        defaultTanch: value
+                      }))
+                    }
+                  }}
+                  onKeyDown={(event) => focusNextOnEnter(event, wastageInputRef.current)}
+                  placeholder="0"
+                />
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="item-master-default-wastage">Default Wastage</label>
+                <input
+                  id="item-master-default-wastage"
+                  ref={wastageInputRef}
+                  type="text"
+                  inputMode="decimal"
+                  value={form.defaultWastage}
+                  onChange={(event) => {
+                    const value = event.target.value
+
+                    if (isValidAmountInput(value)) {
+                      setForm((current) => ({
+                        ...current,
+                        defaultWastage: value
+                      }))
+                    }
+                  }}
+                  onKeyDown={(event) => focusNextOnEnter(event, labourRateInputRef.current)}
+                  placeholder="0"
+                />
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="item-master-default-labour-rate">Labour Rate</label>
+                <input
+                  id="item-master-default-labour-rate"
+                  ref={labourRateInputRef}
+                  type="text"
+                  inputMode="decimal"
+                  value={form.defaultLabourRate}
+                  onChange={(event) => {
+                    const value = event.target.value
+
+                    if (isValidAmountInput(value)) {
+                      setForm((current) => ({
+                        ...current,
+                        defaultLabourRate: value
+                      }))
+                    }
+                  }}
+                  onKeyDown={(event) => focusNextOnEnter(event, labourRateTypeSelectRef.current)}
+                  placeholder="0"
+                />
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="item-master-labour-rate-type">Labour Rate Type</label>
+                <select
+                  id="item-master-labour-rate-type"
+                  ref={labourRateTypeSelectRef}
+                  value={form.labourRateType}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      labourRateType: event.target.value
+                    }))
+                  }
+                  onKeyDown={(event) => focusNextOnEnter(event, barcodeTypeSelectRef.current)}
+                >
+                  <option>Kg</option>
+                  <option>Gm</option>
+                  <option>Pcs</option>
+                </select>
+              </div>
+
+              <div className="formula-preview">
+                <strong>Sale Formula</strong>
+                <span>L.Wt = Pack Wt x Pcs</span>
+                <span>Hishob = Tunch + Wastage</span>
+                <span>Fine = Net Wt x Hishob / 100</span>
               </div>
             </div>
 
@@ -613,31 +765,8 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
                       gstHsnCode: event.target.value
                     }))
                   }
-                  onKeyDown={(event) => focusNextOnEnter(event, fixedWeightInputRef.current)}
-                  placeholder="Optional"
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="item-master-fixed-weight">Fixed Wt./Pcs</label>
-                <input
-                  id="item-master-fixed-weight"
-                  ref={fixedWeightInputRef}
-                  type="text"
-                  inputMode="decimal"
-                  value={form.fixedWeightPerPcs}
-                  onChange={(event) => {
-                    const value = event.target.value
-
-                    if (isValidAmountInput(value)) {
-                      setForm((current) => ({
-                        ...current,
-                        fixedWeightPerPcs: value
-                      }))
-                    }
-                  }}
                   onKeyDown={(event) => focusNextOnEnter(event, activeCheckboxRef.current)}
-                  placeholder="0"
+                  placeholder="Optional"
                 />
               </div>
 
@@ -729,10 +858,14 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
                   <th>Group</th>
                   <th>Stamp</th>
                   <th>Design</th>
-                  <th>Labour By</th>
-                  <th>Sale By</th>
-                  <th>HSN</th>
+                  <th>Pack Wt.</th>
+                  <th>Tunch</th>
+                  <th>Wstg</th>
+                  <th>Hishob</th>
+                  <th>Lab Rate</th>
+                  <th>Lab Type</th>
                   <th>Barcode</th>
+                  <th>HSN</th>
                   <th>Active</th>
                   <th>Action</th>
                 </tr>
@@ -741,13 +874,13 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={12} className="empty-row">
+                    <td colSpan={16} className="empty-row">
                       Loading items...
                     </td>
                   </tr>
                 ) : filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="empty-row">
+                    <td colSpan={16} className="empty-row">
                       {searchText ? 'No matching item found.' : 'No item added yet.'}
                     </td>
                   </tr>
@@ -764,10 +897,18 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
                       <td>{item.groupName}</td>
                       <td>{item.stampName || '-'}</td>
                       <td>{item.designName || '-'}</td>
-                      <td>{item.labourChargesBy}</td>
-                      <td>{item.salePurchaseBy}</td>
-                      <td>{item.gstHsnCode || '-'}</td>
+                      <td>{formatOptionalNumber(item.fixedWeightPerPcs)}</td>
+                      <td>{formatOptionalNumber(item.defaultTanch)}</td>
+                      <td>{formatOptionalNumber(item.defaultWastage)}</td>
+                      <td>
+                        {formatOptionalNumber(
+                          calculateHishob(item.defaultTanch, item.defaultWastage)
+                        )}
+                      </td>
+                      <td>{formatOptionalNumber(item.defaultLabourRate)}</td>
+                      <td>{item.labourRateType}</td>
                       <td>{item.barcodeItem ? 'Yes' : 'No'}</td>
+                      <td>{item.gstHsnCode || '-'}</td>
                       <td>
                         <span className={item.active ? 'status-active' : 'status-inactive'}>
                           {item.active ? 'Yes' : 'No'}
@@ -798,7 +939,8 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
           </div>
 
           <div className="screen-help-text">
-            Tip: Double-click a row to edit. Press Enter to move through the form.
+            Sale logic: Less Weight = Product / Pack Weight x Pcs. Net Weight = Gross Weight - Less
+            Weight. Hishob = Tunch + Wastage. Fine = Net Weight x Hishob / 100.
           </div>
         </div>
       </div>

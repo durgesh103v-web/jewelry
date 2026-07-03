@@ -9,6 +9,8 @@ import { registerItemStampIpc } from './ipc/itemStamp.ipc'
 import { registerItemDesignIpc } from './ipc/itemDesign.ipc'
 import { registerItemIpc } from './ipc/item.ipc'
 import { registerItemOpeningStockIpc } from './ipc/itemOpeningStock.ipc'
+import { registerSaleIpc } from './ipc/sale.ipc'
+import { registerReportIpc } from './ipc/report.ipc'
 
 function createWindow(): void {
   // Create the browser window.
@@ -71,6 +73,8 @@ app.whenReady().then(() => {
   registerItemDesignIpc()
   registerItemIpc()
   registerItemOpeningStockIpc()
+  registerSaleIpc()
+  registerReportIpc()
 
   createWindow()
 

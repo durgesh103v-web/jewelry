@@ -15,6 +15,10 @@ const itemSchema = z.object({
   salePurchaseBy: z.enum(['Weight', 'Pcs']).default('Weight'),
   gstHsnCode: z.string().trim().max(30).optional().default(''),
   fixedWeightPerPcs: z.coerce.number().default(0),
+  defaultTanch: z.coerce.number().default(0),
+  defaultWastage: z.coerce.number().default(0),
+  defaultLabourRate: z.coerce.number().default(0),
+  labourRateType: z.enum(['Kg', 'Gm', 'Pcs']).default('Kg'),
   active: z.boolean().default(true)
 })
 
@@ -36,6 +40,10 @@ type ItemRecord = {
   salePurchaseBy: string
   gstHsnCode: string
   fixedWeightPerPcs: number
+  defaultTanch: number
+  defaultWastage: number
+  defaultLabourRate: number
+  labourRateType: string
   active: boolean
   createdAt: string
   updatedAt: string
@@ -57,6 +65,10 @@ type ItemRow = {
   sale_purchase_by: string
   gst_hsn_code: string | null
   fixed_weight_per_pcs: number
+  default_tanch: number
+  default_wastage: number
+  default_labour_rate: number
+  labour_rate_type: string
   active: number
   created_at: string
   updated_at: string
@@ -83,6 +95,10 @@ function mapRow(row: ItemRow): ItemRecord {
     salePurchaseBy: row.sale_purchase_by,
     gstHsnCode: row.gst_hsn_code ?? '',
     fixedWeightPerPcs: Number(row.fixed_weight_per_pcs ?? 0),
+    defaultTanch: Number(row.default_tanch ?? 0),
+    defaultWastage: Number(row.default_wastage ?? 0),
+    defaultLabourRate: Number(row.default_labour_rate ?? 0),
+    labourRateType: row.labour_rate_type ?? 'Kg',
     active: Boolean(row.active),
     createdAt: row.created_at,
     updatedAt: row.updated_at
@@ -132,6 +148,10 @@ export const itemService = {
           i.sale_purchase_by,
           i.gst_hsn_code,
           i.fixed_weight_per_pcs,
+          i.default_tanch,
+          i.default_wastage,
+          i.default_labour_rate,
+          i.labour_rate_type,
           i.active,
           i.created_at,
           i.updated_at
@@ -190,11 +210,15 @@ export const itemService = {
         sale_purchase_by,
         gst_hsn_code,
         fixed_weight_per_pcs,
+        default_tanch,
+        default_wastage,
+        default_labour_rate,
+        labour_rate_type,
         active,
         created_at,
         updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
     ).run(
       id,
@@ -209,6 +233,10 @@ export const itemService = {
       data.salePurchaseBy,
       data.gstHsnCode,
       data.fixedWeightPerPcs,
+      data.defaultTanch,
+      data.defaultWastage,
+      data.defaultLabourRate,
+      data.labourRateType,
       data.active ? 1 : 0,
       now,
       now
@@ -274,6 +302,10 @@ export const itemService = {
         sale_purchase_by = ?,
         gst_hsn_code = ?,
         fixed_weight_per_pcs = ?,
+        default_tanch = ?,
+        default_wastage = ?,
+        default_labour_rate = ?,
+        labour_rate_type = ?,
         active = ?,
         updated_at = ?
       WHERE id = ?
@@ -290,6 +322,10 @@ export const itemService = {
       data.salePurchaseBy,
       data.gstHsnCode,
       data.fixedWeightPerPcs,
+      data.defaultTanch,
+      data.defaultWastage,
+      data.defaultLabourRate,
+      data.labourRateType,
       data.active ? 1 : 0,
       now,
       id
@@ -336,6 +372,10 @@ export const itemService = {
           i.sale_purchase_by,
           i.gst_hsn_code,
           i.fixed_weight_per_pcs,
+          i.default_tanch,
+          i.default_wastage,
+          i.default_labour_rate,
+          i.labour_rate_type,
           i.active,
           i.created_at,
           i.updated_at

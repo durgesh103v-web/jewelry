@@ -115,6 +115,10 @@ export function getFriendlyErrorMessage(error: unknown): string {
     return 'Opening stock not found. Please refresh and try again.'
   }
 
+  if (lowerMessage.includes('sale not found')) {
+    return 'Sale bill not found. Please refresh and try again.'
+  }
+
   if (lowerMessage.includes('item is required')) {
     return 'Please select item.'
   }

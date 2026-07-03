@@ -64,6 +64,10 @@ type ItemPayload = {
   salePurchaseBy: string
   gstHsnCode: string
   fixedWeightPerPcs: number
+  defaultTanch: number
+  defaultWastage: number
+  defaultLabourRate: number
+  labourRateType: string
   active: boolean
 }
 
@@ -106,6 +110,159 @@ type ItemOpeningStockRecord = ItemOpeningStockPayload & {
   updatedAt: string
 }
 
+type SaleItemLinePayload = {
+  lineType: string
+  itemId: string
+  stampId: string
+  designId: string
+  barcode: string
+  remark: string
+  pcs: number
+  grossWeight: number
+  addWeight: number
+  packWeight?: number
+  tunch?: number
+  wastage?: number
+  unit: string
+  labourRate?: number
+  labourRateType?: 'Kg' | 'Gm' | 'Pcs'
+}
+
+type SalePaymentLinePayload = {
+  type: string
+  jamaNave: 'JAMA' | 'NAVE'
+  details: string
+  pcs: number
+  weight: number
+  tunch: number
+  wastage: number
+  fine: number
+  rate: number
+  fineAmount: number
+  anamat: number
+  cash: number
+  bank: number
+  accountId: string
+}
+
+type SalePayload = {
+  saleDate: string
+  accountId: string
+  phone: string
+  metalType: 'Gold' | 'Silver' | 'Diamond' | 'Other'
+  haste: string
+  dpNo: string
+  narration: string
+  reminderDate: string
+  itemLines: SaleItemLinePayload[]
+  paymentLines: SalePaymentLinePayload[]
+}
+
+type AccountBalanceRecord = {
+  goldFine: number
+  silverFine: number
+  cash: number
+  anamat: number
+  bank: number
+}
+
+type SavedSaleHeader = {
+  id: string
+  sale_no: string
+  sale_date: string
+  account_name: string
+  mobile_number: string
+  metal_type: string
+  old_gold_fine: number
+  old_silver_fine: number
+  old_cash: number
+  old_anamat: number
+  old_bank: number
+  item_fine_total: number
+  item_majuri_total: number
+  payment_fine_jama_total: number
+  payment_cash_jama_total: number
+  payment_bank_jama_total: number
+  payment_anamat_jama_total: number
+  closing_gold_fine: number
+  closing_silver_fine: number
+  closing_cash: number
+  closing_anamat: number
+  closing_bank: number
+  narration: string
+}
+
+type SavedSaleItemLine = {
+  line_no: number
+  item_name_snapshot: string
+  pcs: number
+  gross_weight: number
+  pack_weight: number
+  less_weight: number
+  net_weight: number
+  tunch: number
+  wastage: number
+  hishob: number
+  fine: number
+  labour_rate: number
+  labour_rate_type: string
+  majuri: number
+}
+
+type SavedSalePaymentLine = {
+  line_no: number
+  type: string
+  weight: number
+  tanch: number
+  wastage: number
+  hishob: number
+  fine: number
+  cash: number
+  bank: number
+  anamat: number
+  details: string
+}
+
+type SavedSaleRecord = {
+  header: SavedSaleHeader
+  itemLines: SavedSaleItemLine[]
+  paymentLines: SavedSalePaymentLine[]
+}
+
+type SaleRegisterRecord = {
+  id: string
+  sale_no: string
+  sale_date: string
+  metal_type: string
+  item_fine_total: number
+  item_majuri_total: number
+  payment_fine_jama_total: number
+  payment_cash_jama_total: number
+  closing_gold_fine: number
+  closing_silver_fine: number
+  closing_cash: number
+  account_name: string
+  mobile_number: string
+}
+
+type AccountBalanceReportRecord = {
+  id: string
+  accountName: string
+  otherName: string
+  mobileNumber: string
+  city: string
+  groupName: string
+  openingGoldFine: number
+  openingSilverFine: number
+  openingCash: number
+  openingAnamat: number
+  openingBank: number
+  goldFine: number
+  silverFine: number
+  cash: number
+  anamat: number
+  bank: number
+}
 type AccountPayload = {
   accountName: string
   otherName: string
@@ -181,6 +338,19 @@ interface Window {
       create: (payload: AccountPayload) => Promise<AccountRecord>
       update: (id: string, payload: AccountPayload) => Promise<AccountRecord>
       remove: (id: string) => Promise<{ success: boolean }>
+    }
+
+    sales: {
+      getNextNumber: () => Promise<string>
+      getAccountBalance: (accountId: string) => Promise<AccountBalanceRecord>
+      create: (payload: SalePayload) => Promise<SavedSaleRecord>
+      list: () => Promise<SaleRegisterRecord[]>
+      getById: (id: string) => Promise<SavedSaleRecord>
+      cancel: (id: string) => Promise<{ success: boolean; saleNo: string }>
+    }
+
+    reports: {
+      accountBalance: () => Promise<AccountBalanceReportRecord[]>
     }
   }
 }

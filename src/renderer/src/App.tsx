@@ -8,6 +8,9 @@ import ItemStampScreen from './modules/master/item-stamp/ItemStampScreen'
 import ItemDesignScreen from './modules/master/item-design/ItemDesignScreen'
 import ItemMasterScreen from './modules/master/item-master/ItemMasterScreen'
 import ItemOpeningStockScreen from './modules/master/item-opening-stock/ItemOpeningStockScreen'
+import SaleScreen from './modules/transaction/sale/SaleScreen'
+import SaleRegisterScreen from './modules/transaction/sale-register/SaleRegisterScreen'
+import AccountBalanceReportScreen from './modules/reports/account-balance/AccountBalanceReportScreen'
 import type { AppMenuChild, WorkspaceTab } from './types/menu'
 
 const dashboardTab: WorkspaceTab = {
@@ -155,6 +158,12 @@ function App(): React.JSX.Element {
           <ItemMasterScreen onClose={() => closeTab(activeTab.id)} />
         ) : activeTab.id === 'item-opening-stock' ? (
           <ItemOpeningStockScreen onClose={() => closeTab(activeTab.id)} />
+        ) : activeTab.id === 'sale' ? (
+          <SaleScreen onClose={() => closeTab(activeTab.id)} />
+        ) : activeTab.id === 'sale-register' ? (
+          <SaleRegisterScreen onClose={() => closeTab(activeTab.id)} />
+        ) : activeTab.id === 'account-balance' ? (
+          <AccountBalanceReportScreen onClose={() => closeTab(activeTab.id)} />
         ) : (
           <ModulePlaceholder tab={activeTab} onClose={() => closeTab(activeTab.id)} />
         )}
