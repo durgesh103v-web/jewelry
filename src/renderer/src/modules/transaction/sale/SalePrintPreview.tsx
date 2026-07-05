@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { amountInWords } from '../../../utils/amountInWords'
+import { formatAmount, formatDate, formatQty, formatWeight } from '../../../utils/printFormat'
 
 type SavedSaleHeader = {
   id: string
@@ -85,21 +87,6 @@ const defaultPrinterSetting: PrinterSettingPayload = {
   autoPrintAfterSave: false
 }
 
-function formatNumber(value: number): string {
-  return Number(value || 0)
-    .toFixed(3)
-    .replace(/\.?0+$/, '')
-}
-
-function formatDate(value: string): string {
-  if (!value) return ''
-
-  const [year, month, day] = value.split('-')
-  if (!year || !month || !day) return value
-
-  return `${day}/${month}/${year}`
-}
-
 function SalePrintPreview({
   sale,
   onClose,
@@ -110,11 +97,33 @@ function SalePrintPreview({
   const [loadedSettings, setLoadedSettings] = useState(false)
 
   const header = sale.header
-  const itemLines = sale.itemLines || []
+  const itemLines = useMemo(() => sale.itemLines || [], [sale.itemLines])
   const paymentLines = sale.paymentLines || []
   const oldFine = header.metal_type === 'Gold' ? header.old_gold_fine : header.old_silver_fine
   const closingFine =
     header.metal_type === 'Gold' ? header.closing_gold_fine : header.closing_silver_fine
+
+  const itemTotals = useMemo(() => {
+    return itemLines.reduce(
+      (total, line) => {
+        total.pcs += Number(line.pcs || 0)
+        total.grossWeight += Number(line.gross_weight || 0)
+        total.lessWeight += Number(line.less_weight || 0)
+        total.netWeight += Number(line.net_weight || 0)
+        total.fine += Number(line.fine || 0)
+        total.majuri += Number(line.majuri || 0)
+        return total
+      },
+      {
+        pcs: 0,
+        grossWeight: 0,
+        lessWeight: 0,
+        netWeight: 0,
+        fine: 0,
+        majuri: 0
+      }
+    )
+  }, [itemLines])
 
   const copyCount = useMemo(() => {
     const count = Number(printerSetting.printCopies || 1)
@@ -216,27 +225,31 @@ function SalePrintPreview({
                   </div>
                 )}
 
-                <div className="sale-print-title">{firm?.billTitle || 'SALE BILL'}</div>
+                <div className="sale-print-title">
+                  {firm?.billTitle || 'Tax Invoice / Sale Bill'}
+                </div>
 
-                <div className="sale-print-header">
-                  <div>
-                    <strong>Bill No:</strong> {header.sale_no}
+                <div className="sale-print-bill-info">
+                  <div className="sale-print-party-box">
+                    <strong>Bill To</strong>
+                    <p>{header.account_name || '-'}</p>
+                    <p>Phone: {header.mobile_number || '-'}</p>
                   </div>
-                  <div>
-                    <strong>Date:</strong> {formatDate(header.sale_date)}
-                  </div>
-                  <div>
-                    <strong>Account:</strong> {header.account_name}
-                  </div>
-                  <div>
-                    <strong>Phone:</strong> {header.mobile_number || '-'}
-                  </div>
-                  <div>
-                    <strong>Metal:</strong> {header.metal_type}
+
+                  <div className="sale-print-bill-meta">
+                    <p>
+                      <strong>Bill No:</strong> {header.sale_no}
+                    </p>
+                    <p>
+                      <strong>Date:</strong> {formatDate(header.sale_date)}
+                    </p>
+                    <p>
+                      <strong>Metal:</strong> {header.metal_type}
+                    </p>
                   </div>
                 </div>
 
-                <table className="sale-print-table">
+                <table className="sale-print-table sale-print-item-table">
                   <thead>
                     <tr>
                       <th>Sr</th>
@@ -255,30 +268,45 @@ function SalePrintPreview({
                   </thead>
 
                   <tbody>
-                    {itemLines.map((line) => (
-                      <tr key={line.line_no}>
-                        <td>{line.line_no}</td>
-                        <td>{line.item_name_snapshot}</td>
-                        <td>{formatNumber(line.pcs)}</td>
-                        <td>{formatNumber(line.gross_weight)}</td>
-                        <td>{formatNumber(line.less_weight)}</td>
-                        <td>{formatNumber(line.net_weight)}</td>
-                        <td>{formatNumber(line.tunch)}</td>
-                        <td>{formatNumber(line.wastage)}</td>
-                        <td>{formatNumber(line.hishob)}</td>
-                        <td>{formatNumber(line.fine)}</td>
-                        <td>
-                          {formatNumber(line.labour_rate)} {line.labour_rate_type}
+                    {itemLines.length === 0 ? (
+                      <tr>
+                        <td colSpan={12} className="sale-print-center-cell">
+                          No items found.
                         </td>
-                        <td>{formatNumber(line.majuri)}</td>
                       </tr>
-                    ))}
+                    ) : (
+                      itemLines.map((line) => (
+                        <tr key={line.line_no}>
+                          <td>{line.line_no}</td>
+                          <td>{line.item_name_snapshot}</td>
+                          <td>{formatQty(line.pcs)}</td>
+                          <td>{formatWeight(line.gross_weight)}</td>
+                          <td>{formatWeight(line.less_weight)}</td>
+                          <td>{formatWeight(line.net_weight)}</td>
+                          <td>{formatWeight(line.tunch)}</td>
+                          <td>{formatWeight(line.wastage)}</td>
+                          <td>{formatWeight(line.hishob)}</td>
+                          <td>{formatWeight(line.fine)}</td>
+                          <td>
+                            {formatAmount(line.labour_rate)} {line.labour_rate_type}
+                          </td>
+                          <td>{formatAmount(line.majuri)}</td>
+                        </tr>
+                      ))
+                    )}
 
                     <tr className="print-total-row">
-                      <td colSpan={9}>Total</td>
-                      <td>{formatNumber(header.item_fine_total)}</td>
+                      <td colSpan={2}>Total</td>
+                      <td>{formatQty(itemTotals.pcs)}</td>
+                      <td>{formatWeight(itemTotals.grossWeight)}</td>
+                      <td>{formatWeight(itemTotals.lessWeight)}</td>
+                      <td>{formatWeight(itemTotals.netWeight)}</td>
                       <td></td>
-                      <td>{formatNumber(header.item_majuri_total)}</td>
+                      <td></td>
+                      <td></td>
+                      <td>{formatWeight(header.item_fine_total || itemTotals.fine)}</td>
+                      <td></td>
+                      <td>{formatAmount(header.item_majuri_total || itemTotals.majuri)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -287,7 +315,7 @@ function SalePrintPreview({
                   <>
                     <div className="sale-print-payment-title">Dar / Jama Payment</div>
 
-                    <table className="sale-print-table">
+                    <table className="sale-print-table sale-print-payment-table">
                       <thead>
                         <tr>
                           <th>Sr</th>
@@ -306,66 +334,110 @@ function SalePrintPreview({
                       <tbody>
                         {paymentLines.length === 0 ? (
                           <tr>
-                            <td colSpan={10}>No payment added.</td>
+                            <td colSpan={10} className="sale-print-center-cell">
+                              No payment added.
+                            </td>
                           </tr>
                         ) : (
                           paymentLines.map((line) => (
                             <tr key={line.line_no}>
                               <td>{line.line_no}</td>
                               <td>{line.type}</td>
-                              <td>{formatNumber(line.weight)}</td>
-                              <td>{formatNumber(line.tanch)}</td>
-                              <td>{formatNumber(line.wastage)}</td>
-                              <td>{formatNumber(line.hishob)}</td>
-                              <td>{formatNumber(line.fine)}</td>
-                              <td>{formatNumber(line.cash)}</td>
-                              <td>{formatNumber(line.bank)}</td>
-                              <td>{formatNumber(line.anamat)}</td>
+                              <td>{formatWeight(line.weight)}</td>
+                              <td>{formatWeight(line.tanch)}</td>
+                              <td>{formatWeight(line.wastage)}</td>
+                              <td>{formatWeight(line.hishob)}</td>
+                              <td>{formatWeight(line.fine)}</td>
+                              <td>{formatAmount(line.cash)}</td>
+                              <td>{formatAmount(line.bank)}</td>
+                              <td>{formatAmount(line.anamat)}</td>
                             </tr>
                           ))
                         )}
 
                         <tr className="print-total-row">
                           <td colSpan={6}>Total Jama</td>
-                          <td>{formatNumber(header.payment_fine_jama_total)}</td>
-                          <td>{formatNumber(header.payment_cash_jama_total)}</td>
-                          <td>{formatNumber(header.payment_bank_jama_total)}</td>
-                          <td>{formatNumber(header.payment_anamat_jama_total)}</td>
+                          <td>{formatWeight(header.payment_fine_jama_total)}</td>
+                          <td>{formatAmount(header.payment_cash_jama_total)}</td>
+                          <td>{formatAmount(header.payment_bank_jama_total)}</td>
+                          <td>{formatAmount(header.payment_anamat_jama_total)}</td>
                         </tr>
                       </tbody>
                     </table>
                   </>
                 )}
 
+                <div className="sale-print-bottom-grid">
+                  <div className="sale-print-amount-words">
+                    <strong>Majuri in Words:</strong>
+                    <p>{amountInWords(header.item_majuri_total || itemTotals.majuri)}</p>
+
+                    {header.narration && (
+                      <div className="sale-print-inline-note">
+                        <strong>Narration:</strong> {header.narration}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="sale-print-total-box">
+                    <div>
+                      <span>Current Majuri</span>
+                      <strong>{formatAmount(header.item_majuri_total)}</strong>
+                    </div>
+                    <div>
+                      <span>Cash Jama</span>
+                      <strong>{formatAmount(header.payment_cash_jama_total)}</strong>
+                    </div>
+                    <div>
+                      <span>Bank Jama</span>
+                      <strong>{formatAmount(header.payment_bank_jama_total)}</strong>
+                    </div>
+                    <div className="grand-total">
+                      <span>Closing Cash</span>
+                      <strong>{formatAmount(header.closing_cash)}</strong>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="sale-print-balance-grid">
                   <div className="sale-print-balance-box">
                     <div className="sale-print-balance-title">Old Balance</div>
-                    <BalanceLine label={`${header.metal_type} Fine`} value={oldFine} />
-                    <BalanceLine label="Cash" value={header.old_cash} />
-                    <BalanceLine label="Bank" value={header.old_bank} />
-                    <BalanceLine label="Anamat" value={header.old_anamat} />
+                    <BalanceLine
+                      label={`${header.metal_type} Fine`}
+                      value={oldFine}
+                      valueType="weight"
+                    />
+                    <BalanceLine label="Cash" value={header.old_cash} valueType="amount" />
+                    <BalanceLine label="Bank" value={header.old_bank} valueType="amount" />
+                    <BalanceLine label="Anamat" value={header.old_anamat} valueType="amount" />
                   </div>
 
                   <div className="sale-print-balance-box">
                     <div className="sale-print-balance-title">Current Bill</div>
-                    <BalanceLine label="Item Fine" value={header.item_fine_total} />
-                    <BalanceLine label="Majuri" value={header.item_majuri_total} />
+                    <BalanceLine
+                      label="Item Fine"
+                      value={header.item_fine_total}
+                      valueType="weight"
+                    />
+                    <BalanceLine
+                      label="Majuri"
+                      value={header.item_majuri_total}
+                      valueType="amount"
+                    />
                   </div>
 
                   <div className="sale-print-balance-box">
                     <div className="sale-print-balance-title">Closing Balance</div>
-                    <BalanceLine label={`${header.metal_type} Fine`} value={closingFine} />
-                    <BalanceLine label="Cash" value={header.closing_cash} />
-                    <BalanceLine label="Bank" value={header.closing_bank} />
-                    <BalanceLine label="Anamat" value={header.closing_anamat} />
+                    <BalanceLine
+                      label={`${header.metal_type} Fine`}
+                      value={closingFine}
+                      valueType="weight"
+                    />
+                    <BalanceLine label="Cash" value={header.closing_cash} valueType="amount" />
+                    <BalanceLine label="Bank" value={header.closing_bank} valueType="amount" />
+                    <BalanceLine label="Anamat" value={header.closing_anamat} valueType="amount" />
                   </div>
                 </div>
-
-                {header.narration && (
-                  <div className="sale-print-narration">
-                    <strong>Narration:</strong> {header.narration}
-                  </div>
-                )}
 
                 {printerSetting.showTerms && firm?.terms && (
                   <div className="sale-print-terms">
@@ -375,7 +447,7 @@ function SalePrintPreview({
 
                 {printerSetting.showSignature && (
                   <div className="sale-print-sign-row">
-                    <div>Receiver Signature</div>
+                    <div>Customer Signature</div>
                     <div>Authorized Signature</div>
                   </div>
                 )}
@@ -394,11 +466,19 @@ function SalePrintPreview({
   )
 }
 
-function BalanceLine({ label, value }: { label: string; value: number }): React.JSX.Element {
+function BalanceLine({
+  label,
+  value,
+  valueType
+}: {
+  label: string
+  value: number
+  valueType: 'amount' | 'weight'
+}): React.JSX.Element {
   return (
     <div className="sale-print-balance-line">
       <span>{label}</span>
-      <strong>{formatNumber(value)}</strong>
+      <strong>{valueType === 'amount' ? formatAmount(value) : formatWeight(value)}</strong>
     </div>
   )
 }

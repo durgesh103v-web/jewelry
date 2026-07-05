@@ -8,6 +8,8 @@ export type CashBookReportRow = {
   voucherDate: string
   voucherNo: string
   voucherType: 'RECEIPT' | 'PAYMENT'
+  sourceType: string
+  sourceLabel: string
   accountName: string
   narration: string
   receiptAmount: number

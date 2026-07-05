@@ -5,76 +5,99 @@ import type {
   CashBookReportRow
 } from '../../shared/types/cashBookReport'
 
-type CashBookVoucherRow = {
+type CashBookLedgerRow = {
   id: string
-  voucher_date: string
-  voucher_no: string
-  voucher_type: 'RECEIPT' | 'PAYMENT'
-  amount: number
+  entry_date: string
+  source_type: string
+  source_id: string
+  cash_jama: number
+  cash_nave: number
   narration: string | null
+  created_at: string
   account_name: string | null
+  sale_no: string | null
+  purchase_no: string | null
+  voucher_no: string | null
+  voucher_type: 'RECEIPT' | 'PAYMENT' | null
 }
+
+const allowedSources = ['SALE_PAYMENT', 'PURCHASE_PAYMENT', 'CASH_RECEIPT', 'CASH_PAYMENT']
 
 function getTodayDate(): string {
   return new Date().toISOString().slice(0, 10)
+}
+
+function getSourceLabel(sourceType: string): string {
+  if (sourceType === 'SALE_PAYMENT') return 'Sale Receipt'
+  if (sourceType === 'PURCHASE_PAYMENT') return 'Purchase Payment'
+  if (sourceType === 'CASH_RECEIPT') return 'Cash Receipt'
+  if (sourceType === 'CASH_PAYMENT') return 'Cash Payment'
+  return sourceType
+}
+
+function getDisplayVoucherNo(row: CashBookLedgerRow): string {
+  return row.voucher_no || row.sale_no || row.purchase_no || '-'
 }
 
 export function getCashBookReport(filter: CashBookReportFilter = {}): CashBookReportResult {
   const db = getDatabase()
   const fromDate = filter.fromDate || getTodayDate()
   const toDate = filter.toDate || getTodayDate()
+  const sourcePlaceholders = allowedSources.map(() => '?').join(', ')
 
   const openingRow = db
     .prepare(
       `
       SELECT
-        COALESCE(
-          SUM(
-            CASE
-              WHEN voucher_type = 'RECEIPT' THEN amount
-              WHEN voucher_type = 'PAYMENT' THEN -amount
-              ELSE 0
-            END
-          ),
-          0
-        ) AS opening_balance
-      FROM cash_vouchers
-      WHERE voucher_date < ?
-      AND deleted_at IS NULL
+        COALESCE(SUM(cash_jama - cash_nave), 0) AS opening_balance
+      FROM account_ledger
+      WHERE entry_date < ?
+        AND source_type IN (${sourcePlaceholders})
+        AND (cash_jama != 0 OR cash_nave != 0)
     `
     )
-    .get(fromDate) as { opening_balance: number } | undefined
+    .get(fromDate, ...allowedSources) as { opening_balance: number } | undefined
 
   const openingBalance = Number(openingRow?.opening_balance || 0)
 
-  const voucherRows = db
+  const ledgerRows = db
     .prepare(
       `
       SELECT
-        cv.id,
-        cv.voucher_date,
+        al.id,
+        al.entry_date,
+        al.source_type,
+        al.source_id,
+        al.cash_jama,
+        al.cash_nave,
+        al.narration,
+        al.created_at,
+        a.account_name,
+        sh.sale_no,
+        ph.purchase_no,
         cv.voucher_no,
-        cv.voucher_type,
-        cv.amount,
-        cv.narration,
-        a.account_name
-      FROM cash_vouchers cv
-      LEFT JOIN accounts a ON a.id = cv.account_id
-      WHERE cv.voucher_date >= ?
-      AND cv.voucher_date <= ?
-      AND cv.deleted_at IS NULL
-      ORDER BY cv.voucher_date ASC, cv.created_at ASC
+        cv.voucher_type
+      FROM account_ledger al
+      LEFT JOIN accounts a ON a.id = al.account_id
+      LEFT JOIN sale_headers sh ON sh.id = al.source_id AND al.source_type = 'SALE_PAYMENT'
+      LEFT JOIN purchase_headers ph ON ph.id = al.source_id AND al.source_type = 'PURCHASE_PAYMENT'
+      LEFT JOIN cash_vouchers cv ON cv.id = al.source_id AND al.source_type IN ('CASH_RECEIPT', 'CASH_PAYMENT')
+      WHERE al.entry_date >= ?
+        AND al.entry_date <= ?
+        AND al.source_type IN (${sourcePlaceholders})
+        AND (al.cash_jama != 0 OR al.cash_nave != 0)
+      ORDER BY al.entry_date ASC, al.created_at ASC, al.id ASC
     `
     )
-    .all(fromDate, toDate) as CashBookVoucherRow[]
+    .all(fromDate, toDate, ...allowedSources) as CashBookLedgerRow[]
 
   let runningBalance = openingBalance
   let totalReceipt = 0
   let totalPayment = 0
 
-  const rows: CashBookReportRow[] = voucherRows.map((row) => {
-    const receiptAmount = row.voucher_type === 'RECEIPT' ? Number(row.amount || 0) : 0
-    const paymentAmount = row.voucher_type === 'PAYMENT' ? Number(row.amount || 0) : 0
+  const rows: CashBookReportRow[] = ledgerRows.map((row) => {
+    const receiptAmount = Number(row.cash_jama || 0)
+    const paymentAmount = Number(row.cash_nave || 0)
 
     runningBalance = runningBalance + receiptAmount - paymentAmount
     totalReceipt += receiptAmount
@@ -82,9 +105,11 @@ export function getCashBookReport(filter: CashBookReportFilter = {}): CashBookRe
 
     return {
       id: row.id,
-      voucherDate: row.voucher_date,
-      voucherNo: row.voucher_no,
-      voucherType: row.voucher_type,
+      voucherDate: row.entry_date,
+      voucherNo: getDisplayVoucherNo(row),
+      voucherType: receiptAmount > 0 ? 'RECEIPT' : 'PAYMENT',
+      sourceType: row.source_type,
+      sourceLabel: getSourceLabel(row.source_type),
       accountName: row.account_name || '',
       narration: row.narration || '',
       receiptAmount,

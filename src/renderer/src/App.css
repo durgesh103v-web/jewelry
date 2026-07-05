@@ -1572,6 +1572,127 @@ button {
   }
 }
 
+
+.sale-print-title {
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.sale-print-bill-info {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  border: 1px solid #111827;
+  margin-bottom: 10px;
+  background: #ffffff;
+}
+
+.sale-print-party-box,
+.sale-print-bill-meta {
+  padding: 8px 10px;
+  min-height: 66px;
+}
+
+.sale-print-party-box {
+  border-right: 1px solid #111827;
+}
+
+.sale-print-party-box strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.sale-print-party-box p,
+.sale-print-bill-meta p {
+  margin: 3px 0;
+}
+
+.sale-print-item-table th,
+.sale-print-payment-table th {
+  font-size: 11px;
+}
+
+.sale-print-center-cell {
+  text-align: center !important;
+  padding: 10px !important;
+  color: #475569;
+}
+
+.sale-print-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  border-left: 1px solid #111827;
+  border-right: 1px solid #111827;
+  border-bottom: 1px solid #111827;
+  margin-top: -10px;
+  margin-bottom: 10px;
+}
+
+.sale-print-amount-words {
+  padding: 8px 10px;
+  border-right: 1px solid #111827;
+  min-height: 86px;
+}
+
+.sale-print-amount-words p {
+  margin: 5px 0 0;
+  font-weight: 700;
+}
+
+.sale-print-inline-note {
+  margin-top: 12px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.sale-print-total-box div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #111827;
+}
+
+.sale-print-total-box div:last-child {
+  border-bottom: none;
+}
+
+.sale-print-total-box span {
+  font-weight: 700;
+}
+
+.sale-print-total-box strong {
+  white-space: nowrap;
+}
+
+.sale-print-total-box .grand-total {
+  background: #f1f5f9;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.sale-print-paper-80mm .sale-print-bill-info,
+.sale-print-paper-58mm .sale-print-bill-info,
+.sale-print-paper-80mm .sale-print-bottom-grid,
+.sale-print-paper-58mm .sale-print-bottom-grid {
+  grid-template-columns: 1fr;
+}
+
+.sale-print-paper-80mm .sale-print-party-box,
+.sale-print-paper-58mm .sale-print-party-box,
+.sale-print-paper-80mm .sale-print-amount-words,
+.sale-print-paper-58mm .sale-print-amount-words {
+  border-right: none;
+  border-bottom: 1px solid #111827;
+}
+
+.sale-print-paper-80mm .sale-print-item-table,
+.sale-print-paper-58mm .sale-print-item-table,
+.sale-print-paper-80mm .sale-print-payment-table,
+.sale-print-paper-58mm .sale-print-payment-table {
+  font-size: 9px;
+}
 .sale-register-screen {
   width: 100%;
   height: 100%;
@@ -3400,4 +3521,110 @@ button {
     border: 1px solid #000 !important;
     padding: 6px !important;
   }
+}
+.firm-master-screen {
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.firm-master-window {
+  width: 980px;
+  height: 100%;
+  background: #f2f6f8;
+  border: 1px solid #7c9bab;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.firm-master-body {
+  flex: 1;
+  min-height: 0;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+.firm-master-panel {
+  background: white;
+  border: 1px solid #c7d2da;
+  padding: 12px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.firm-master-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.firm-address-field,
+.firm-terms-field {
+  grid-column: span 2;
+}
+
+.firm-address-field textarea,
+.firm-terms-field textarea {
+  width: 100%;
+  height: 62px;
+  border: 1px solid #bfcbd3;
+  padding: 7px 8px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+}
+
+.firm-address-field textarea:focus,
+.firm-terms-field textarea:focus {
+  border-color: #0d4f7a;
+}
+
+.firm-preview-card {
+  background: #ffffff;
+  border: 1px solid #c7d2da;
+  padding: 14px;
+  text-align: center;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.firm-preview-title {
+  text-align: left;
+  color: #52606d;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.firm-preview-card h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
+  color: #0f172a;
+  text-transform: uppercase;
+}
+
+.firm-preview-card p {
+  margin: 0 0 4px;
+  color: #334155;
+}
+
+.firm-preview-line {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  font-size: 12px;
+  color: #475569;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.firm-master-button-row {
+  padding-left: 0;
+  margin-bottom: 8px;
 }

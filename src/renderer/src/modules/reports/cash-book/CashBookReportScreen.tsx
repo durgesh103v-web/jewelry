@@ -171,7 +171,7 @@ function CashBookReportScreen({ onClose }: { onClose: () => void }): React.JSX.E
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Voucher No</th>
+                  <th>Bill / Voucher No</th>
                   <th>Type</th>
                   <th>Particular</th>
                   <th>Narration</th>
@@ -212,7 +212,8 @@ function CashBookReportScreen({ onClose }: { onClose: () => void }): React.JSX.E
                       <td>{row.voucherNo}</td>
                       <td>
                         <span className={`cash-book-badge ${row.voucherType.toLowerCase()}`}>
-                          {row.voucherType === 'RECEIPT' ? 'Receipt' : 'Payment'}
+                          {row.sourceLabel ||
+                            (row.voucherType === 'RECEIPT' ? 'Receipt' : 'Payment')}
                         </span>
                       </td>
                       <td>{row.accountName || '-'}</td>
@@ -235,8 +236,8 @@ function CashBookReportScreen({ onClose }: { onClose: () => void }): React.JSX.E
           </div>
 
           <div className="screen-help-text no-print">
-            Cash Receipt increases cash. Cash Payment decreases cash. Opening balance is calculated
-            from previous vouchers.
+            Cash Book is calculated from ledger cash movement. Sale receipt and Cash Receipt
+            increase cash. Purchase payment and Cash Payment decrease cash.
           </div>
         </div>
       </div>

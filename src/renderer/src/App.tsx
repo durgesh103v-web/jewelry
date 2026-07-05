@@ -8,6 +8,7 @@ import ItemStampScreen from './modules/master/item-stamp/ItemStampScreen'
 import ItemDesignScreen from './modules/master/item-design/ItemDesignScreen'
 import ItemMasterScreen from './modules/master/item-master/ItemMasterScreen'
 import ItemOpeningStockScreen from './modules/master/item-opening-stock/ItemOpeningStockScreen'
+import FirmMasterScreen from './modules/master/firm-master/FirmMasterScreen'
 import SaleScreen from './modules/transaction/sale/SaleScreen'
 import PurchaseScreen from './modules/transaction/purchase/PurchaseScreen'
 import PurchaseRegisterScreen from './modules/transaction/purchase-register/PurchaseRegisterScreen'
@@ -168,6 +169,8 @@ function App(): React.JSX.Element {
           <ItemMasterScreen onClose={() => closeTab(activeTab.id)} />
         ) : activeTab.id === 'item-opening-stock' ? (
           <ItemOpeningStockScreen onClose={() => closeTab(activeTab.id)} />
+        ) : activeTab.id === 'firm-master' ? (
+          <FirmMasterScreen onClose={() => closeTab(activeTab.id)} />
         ) : activeTab.id === 'sale' ? (
           <SaleScreen onClose={() => closeTab(activeTab.id)} />
         ) : activeTab.id === 'purchase' ? (
