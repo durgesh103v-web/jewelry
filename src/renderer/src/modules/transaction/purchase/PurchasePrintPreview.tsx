@@ -1,74 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 
-type SavedSaleHeader = {
-  id: string
-  sale_no: string
-  sale_date: string
-  account_name: string
-  mobile_number: string
-  metal_type: string
-  old_gold_fine: number
-  old_silver_fine: number
-  old_cash: number
-  old_anamat: number
-  old_bank: number
-  item_fine_total: number
-  item_majuri_total: number
-  payment_fine_jama_total: number
-  payment_cash_jama_total: number
-  payment_bank_jama_total: number
-  payment_anamat_jama_total: number
-  closing_gold_fine: number
-  closing_silver_fine: number
-  closing_cash: number
-  closing_anamat: number
-  closing_bank: number
-  narration: string
-}
-
-type SavedSaleItemLine = {
-  line_no: number
-  item_name_snapshot: string
-  pcs: number
-  gross_weight: number
-  pack_weight: number
-  less_weight: number
-  net_weight: number
-  tunch: number
-  wastage: number
-  hishob: number
-  fine: number
-  labour_rate: number
-  labour_rate_type: string
-  majuri: number
-}
-
-type SavedSalePaymentLine = {
-  line_no: number
-  type: string
-  weight: number
-  tanch: number
-  wastage: number
-  hishob: number
-  fine: number
-  cash: number
-  bank: number
-  anamat: number
-  details: string
-}
-
-export type SavedSaleRecord = {
-  header: SavedSaleHeader
-  itemLines: SavedSaleItemLine[]
-  paymentLines: SavedSalePaymentLine[]
-}
-
-type SalePrintPreviewProps = {
-  sale: SavedSaleRecord
-  onClose: () => void
-  autoPrintOnOpen?: boolean
-}
-
 const defaultPrinterSetting: PrinterSettingPayload = {
   paperSize: 'A4',
   printLayout: 'STANDARD',
@@ -100,18 +31,19 @@ function formatDate(value: string): string {
   return `${day}/${month}/${year}`
 }
 
-function SalePrintPreview({
-  sale,
-  onClose,
-  autoPrintOnOpen = false
-}: SalePrintPreviewProps): React.JSX.Element {
+function PurchasePrintPreview({
+  purchase,
+  onClose
+}: {
+  purchase: SavedPurchaseRecord
+  onClose: () => void
+}): React.JSX.Element {
   const [firm, setFirm] = useState<FirmRecord | null>(null)
   const [printerSetting, setPrinterSetting] = useState<PrinterSettingPayload>(defaultPrinterSetting)
-  const [loadedSettings, setLoadedSettings] = useState(false)
 
-  const header = sale.header
-  const itemLines = sale.itemLines || []
-  const paymentLines = sale.paymentLines || []
+  const header = purchase.header
+  const itemLines = purchase.itemLines || []
+  const paymentLines = purchase.paymentLines || []
   const oldFine = header.metal_type === 'Gold' ? header.old_gold_fine : header.old_silver_fine
   const closingFine =
     header.metal_type === 'Gold' ? header.closing_gold_fine : header.closing_silver_fine
@@ -144,15 +76,10 @@ function SalePrintPreview({
           ])
 
           setFirm(firmData)
-          setPrinterSetting({
-            ...defaultPrinterSetting,
-            ...printerData
-          })
+          setPrinterSetting({ ...defaultPrinterSetting, ...printerData })
         } catch {
           setFirm(null)
           setPrinterSetting(defaultPrinterSetting)
-        } finally {
-          setLoadedSettings(true)
         }
       }
 
@@ -162,24 +89,13 @@ function SalePrintPreview({
     return () => window.clearTimeout(loadTimer)
   }, [])
 
-  useEffect(() => {
-    if (!loadedSettings || !autoPrintOnOpen || !printerSetting.autoPrintAfterSave) return
-
-    const printTimer = window.setTimeout(() => {
-      window.print()
-    }, 500)
-
-    return () => window.clearTimeout(printTimer)
-  }, [autoPrintOnOpen, loadedSettings, printerSetting.autoPrintAfterSave])
-
   return (
     <div className="print-preview-overlay">
       <div className="print-preview-window">
         <div className="print-preview-toolbar">
           <strong>
-            Sale Print Preview - {printerSetting.paperSize} / {printerSetting.printLayout}
+            Purchase Print Preview - {printerSetting.paperSize} / {printerSetting.printLayout}
           </strong>
-
           <div>
             <button className="btn-save" type="button" onClick={() => window.print()}>
               Print
@@ -197,7 +113,6 @@ function SalePrintPreview({
                 {printerSetting.showFirmHeader && (
                   <div className="sale-print-firm-header">
                     <h1>{firm?.firmName || 'Your Firm Name'}</h1>
-
                     {(firm?.address || firm?.city || firm?.state || firm?.pincode) && (
                       <p>
                         {firm?.address}
@@ -206,7 +121,6 @@ function SalePrintPreview({
                         {firm?.pincode ? ` - ${firm.pincode}` : ''}
                       </p>
                     )}
-
                     <div className="sale-print-firm-contact">
                       {firm?.mobileNumber && <span>Mob: {firm.mobileNumber}</span>}
                       {firm?.whatsappNumber && <span>WhatsApp: {firm.whatsappNumber}</span>}
@@ -216,17 +130,16 @@ function SalePrintPreview({
                   </div>
                 )}
 
-                <div className="sale-print-title">{firm?.billTitle || 'SALE BILL'}</div>
-
+                <div className="sale-print-title">PURCHASE BILL</div>
                 <div className="sale-print-header">
                   <div>
-                    <strong>Bill No:</strong> {header.sale_no}
+                    <strong>Bill No:</strong> {header.purchase_no}
                   </div>
                   <div>
-                    <strong>Date:</strong> {formatDate(header.sale_date)}
+                    <strong>Date:</strong> {formatDate(header.purchase_date)}
                   </div>
                   <div>
-                    <strong>Account:</strong> {header.account_name}
+                    <strong>Supplier:</strong> {header.account_name}
                   </div>
                   <div>
                     <strong>Phone:</strong> {header.mobile_number || '-'}
@@ -235,7 +148,6 @@ function SalePrintPreview({
                     <strong>Metal:</strong> {header.metal_type}
                   </div>
                 </div>
-
                 <table className="sale-print-table">
                   <thead>
                     <tr>
@@ -253,7 +165,6 @@ function SalePrintPreview({
                       <th>Majuri</th>
                     </tr>
                   </thead>
-
                   <tbody>
                     {itemLines.map((line) => (
                       <tr key={line.line_no}>
@@ -273,7 +184,6 @@ function SalePrintPreview({
                         <td>{formatNumber(line.majuri)}</td>
                       </tr>
                     ))}
-
                     <tr className="print-total-row">
                       <td colSpan={9}>Total</td>
                       <td>{formatNumber(header.item_fine_total)}</td>
@@ -285,8 +195,7 @@ function SalePrintPreview({
 
                 {printerSetting.showPaymentSection && (
                   <>
-                    <div className="sale-print-payment-title">Dar / Jama Payment</div>
-
+                    <div className="sale-print-payment-title">Payment Nave</div>
                     <table className="sale-print-table">
                       <thead>
                         <tr>
@@ -296,13 +205,12 @@ function SalePrintPreview({
                           <th>Tunch</th>
                           <th>Wstg</th>
                           <th>Hishob</th>
-                          <th>Fine Jama</th>
-                          <th>Cash Jama</th>
-                          <th>Bank Jama</th>
+                          <th>Fine Nave</th>
+                          <th>Cash Nave</th>
+                          <th>Bank Nave</th>
                           <th>Anamat</th>
                         </tr>
                       </thead>
-
                       <tbody>
                         {paymentLines.length === 0 ? (
                           <tr>
@@ -324,13 +232,12 @@ function SalePrintPreview({
                             </tr>
                           ))
                         )}
-
                         <tr className="print-total-row">
-                          <td colSpan={6}>Total Jama</td>
-                          <td>{formatNumber(header.payment_fine_jama_total)}</td>
-                          <td>{formatNumber(header.payment_cash_jama_total)}</td>
-                          <td>{formatNumber(header.payment_bank_jama_total)}</td>
-                          <td>{formatNumber(header.payment_anamat_jama_total)}</td>
+                          <td colSpan={6}>Total Nave</td>
+                          <td>{formatNumber(header.payment_fine_nave_total)}</td>
+                          <td>{formatNumber(header.payment_cash_nave_total)}</td>
+                          <td>{formatNumber(header.payment_bank_nave_total)}</td>
+                          <td>{formatNumber(header.payment_anamat_nave_total)}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -345,13 +252,11 @@ function SalePrintPreview({
                     <BalanceLine label="Bank" value={header.old_bank} />
                     <BalanceLine label="Anamat" value={header.old_anamat} />
                   </div>
-
                   <div className="sale-print-balance-box">
-                    <div className="sale-print-balance-title">Current Bill</div>
-                    <BalanceLine label="Item Fine" value={header.item_fine_total} />
-                    <BalanceLine label="Majuri" value={header.item_majuri_total} />
+                    <div className="sale-print-balance-title">Current Purchase</div>
+                    <BalanceLine label="Item Fine Jama" value={header.item_fine_total} />
+                    <BalanceLine label="Majuri Jama" value={header.item_majuri_total} />
                   </div>
-
                   <div className="sale-print-balance-box">
                     <div className="sale-print-balance-title">Closing Balance</div>
                     <BalanceLine label={`${header.metal_type} Fine`} value={closingFine} />
@@ -403,4 +308,4 @@ function BalanceLine({ label, value }: { label: string; value: number }): React.
   )
 }
 
-export default SalePrintPreview
+export default PurchasePrintPreview

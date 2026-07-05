@@ -318,7 +318,175 @@ function runMigrations(database: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_account_ledger_source
     ON account_ledger(source_type, source_id);
   `)
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS purchase_headers (
+      id TEXT PRIMARY KEY,
+      purchase_no TEXT NOT NULL UNIQUE,
+      purchase_date TEXT NOT NULL,
+      account_id TEXT NOT NULL,
+      phone TEXT DEFAULT '',
+      metal_type TEXT NOT NULL,
+      haste TEXT DEFAULT '',
+      dp_no TEXT DEFAULT '',
+      narration TEXT DEFAULT '',
+      reminder_date TEXT DEFAULT '',
+      old_gold_fine REAL NOT NULL DEFAULT 0,
+      old_silver_fine REAL NOT NULL DEFAULT 0,
+      old_cash REAL NOT NULL DEFAULT 0,
+      old_anamat REAL NOT NULL DEFAULT 0,
+      old_bank REAL NOT NULL DEFAULT 0,
+      item_fine_total REAL NOT NULL DEFAULT 0,
+      item_majuri_total REAL NOT NULL DEFAULT 0,
+      payment_fine_nave_total REAL NOT NULL DEFAULT 0,
+      payment_cash_nave_total REAL NOT NULL DEFAULT 0,
+      payment_bank_nave_total REAL NOT NULL DEFAULT 0,
+      payment_anamat_nave_total REAL NOT NULL DEFAULT 0,
+      closing_gold_fine REAL NOT NULL DEFAULT 0,
+      closing_silver_fine REAL NOT NULL DEFAULT 0,
+      closing_cash REAL NOT NULL DEFAULT 0,
+      closing_anamat REAL NOT NULL DEFAULT 0,
+      closing_bank REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT,
+      FOREIGN KEY (account_id) REFERENCES accounts(id)
+    );
 
+    CREATE TABLE IF NOT EXISTS purchase_item_lines (
+      id TEXT PRIMARY KEY,
+      purchase_id TEXT NOT NULL,
+      line_no INTEGER NOT NULL,
+      line_type TEXT NOT NULL DEFAULT 'JAMA',
+      item_id TEXT NOT NULL,
+      stamp_id TEXT,
+      design_id TEXT,
+      item_name_snapshot TEXT NOT NULL,
+      barcode TEXT DEFAULT '',
+      remark TEXT DEFAULT '',
+      pcs REAL NOT NULL DEFAULT 0,
+      gross_weight REAL NOT NULL DEFAULT 0,
+      pack_weight REAL NOT NULL DEFAULT 0,
+      less_weight REAL NOT NULL DEFAULT 0,
+      add_weight REAL NOT NULL DEFAULT 0,
+      net_weight REAL NOT NULL DEFAULT 0,
+      tunch REAL NOT NULL DEFAULT 0,
+      wastage REAL NOT NULL DEFAULT 0,
+      hishob REAL NOT NULL DEFAULT 0,
+      unit TEXT DEFAULT 'GM',
+      labour_rate REAL NOT NULL DEFAULT 0,
+      labour_rate_type TEXT NOT NULL DEFAULT 'Kg',
+      fine REAL NOT NULL DEFAULT 0,
+      majuri REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (purchase_id) REFERENCES purchase_headers(id),
+      FOREIGN KEY (item_id) REFERENCES items(id),
+      FOREIGN KEY (stamp_id) REFERENCES item_stamps(id),
+      FOREIGN KEY (design_id) REFERENCES item_designs(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS purchase_payment_lines (
+      id TEXT PRIMARY KEY,
+      purchase_id TEXT NOT NULL,
+      line_no INTEGER NOT NULL,
+      type TEXT NOT NULL DEFAULT '',
+      jama_nave TEXT NOT NULL DEFAULT 'NAVE',
+      details TEXT DEFAULT '',
+      pcs REAL NOT NULL DEFAULT 0,
+      weight REAL NOT NULL DEFAULT 0,
+      tanch REAL NOT NULL DEFAULT 0,
+      wastage REAL NOT NULL DEFAULT 0,
+      hishob REAL NOT NULL DEFAULT 0,
+      fine REAL NOT NULL DEFAULT 0,
+      rate REAL NOT NULL DEFAULT 0,
+      fine_amount REAL NOT NULL DEFAULT 0,
+      anamat REAL NOT NULL DEFAULT 0,
+      cash REAL NOT NULL DEFAULT 0,
+      bank REAL NOT NULL DEFAULT 0,
+      account_id TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (purchase_id) REFERENCES purchase_headers(id),
+      FOREIGN KEY (account_id) REFERENCES accounts(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_purchase_headers_account
+    ON purchase_headers(account_id);
+
+    CREATE INDEX IF NOT EXISTS idx_purchase_headers_date
+    ON purchase_headers(purchase_date);
+
+    CREATE INDEX IF NOT EXISTS idx_purchase_item_lines_purchase
+    ON purchase_item_lines(purchase_id);
+
+    CREATE INDEX IF NOT EXISTS idx_purchase_payment_lines_purchase
+    ON purchase_payment_lines(purchase_id);
+  `)
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS firm_settings (
+      id TEXT PRIMARY KEY,
+      firm_name TEXT NOT NULL DEFAULT '',
+      owner_name TEXT DEFAULT '',
+      address TEXT DEFAULT '',
+      city TEXT DEFAULT '',
+      state TEXT DEFAULT '',
+      pincode TEXT DEFAULT '',
+      mobile_number TEXT DEFAULT '',
+      whatsapp_number TEXT DEFAULT '',
+      email TEXT DEFAULT '',
+      gst_no TEXT DEFAULT '',
+      pan_no TEXT DEFAULT '',
+      bill_title TEXT DEFAULT 'SALE BILL',
+      bill_prefix TEXT DEFAULT 'SL',
+      terms TEXT DEFAULT '',
+      active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+  `)
+
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS printer_settings (
+      id TEXT PRIMARY KEY,
+      paper_size TEXT NOT NULL DEFAULT 'A4',
+      print_layout TEXT NOT NULL DEFAULT 'STANDARD',
+      print_copies INTEGER NOT NULL DEFAULT 1,
+      margin_top_mm REAL NOT NULL DEFAULT 10,
+      margin_right_mm REAL NOT NULL DEFAULT 10,
+      margin_bottom_mm REAL NOT NULL DEFAULT 10,
+      margin_left_mm REAL NOT NULL DEFAULT 10,
+      show_firm_header INTEGER NOT NULL DEFAULT 1,
+      show_gst_pan INTEGER NOT NULL DEFAULT 1,
+      show_terms INTEGER NOT NULL DEFAULT 1,
+      show_signature INTEGER NOT NULL DEFAULT 1,
+      show_payment_section INTEGER NOT NULL DEFAULT 1,
+      auto_print_after_save INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+  `)
+
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS cash_vouchers (
+      id TEXT PRIMARY KEY,
+      voucher_type TEXT NOT NULL CHECK (voucher_type IN ('RECEIPT', 'PAYMENT')),
+      voucher_no TEXT NOT NULL UNIQUE,
+      voucher_date TEXT NOT NULL,
+      account_id TEXT NOT NULL,
+      amount REAL NOT NULL DEFAULT 0,
+      narration TEXT DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT,
+      FOREIGN KEY (account_id) REFERENCES accounts(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_cash_vouchers_account
+    ON cash_vouchers(account_id);
+
+    CREATE INDEX IF NOT EXISTS idx_cash_vouchers_date
+    ON cash_vouchers(voucher_date);
+  `)
   addColumnIfMissing(database, 'items', 'default_tanch', 'REAL NOT NULL DEFAULT 0')
   addColumnIfMissing(database, 'items', 'default_wastage', 'REAL NOT NULL DEFAULT 0')
   addColumnIfMissing(database, 'items', 'default_labour_rate', 'REAL NOT NULL DEFAULT 0')

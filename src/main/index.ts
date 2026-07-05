@@ -10,8 +10,12 @@ import { registerItemDesignIpc } from './ipc/itemDesign.ipc'
 import { registerItemIpc } from './ipc/item.ipc'
 import { registerItemOpeningStockIpc } from './ipc/itemOpeningStock.ipc'
 import { registerSaleIpc } from './ipc/sale.ipc'
+import { registerPurchaseIpc } from './ipc/purchase.ipc'
 import { registerReportIpc } from './ipc/report.ipc'
 import { registerBackupIpc } from './ipc/backup.ipc'
+import { registerFirmIpc } from './ipc/firm.ipc'
+import { registerPrinterSettingIpc } from './ipc/printerSetting.ipc'
+import { registerCashVoucherIpc } from './ipc/cashVoucher.ipc'
 
 function createWindow(): void {
   // Create the browser window.
@@ -75,8 +79,12 @@ app.whenReady().then(() => {
   registerItemIpc()
   registerItemOpeningStockIpc()
   registerSaleIpc()
+  registerPurchaseIpc()
   registerReportIpc()
   registerBackupIpc()
+  registerFirmIpc()
+  registerPrinterSettingIpc()
+  registerCashVoucherIpc()
 
   createWindow()
 

@@ -64,13 +64,14 @@ export const stockReportService = {
           ig.group_name AS groupName,
           COALESCE(st.stamp_name, '') AS stampName,
           COALESCE(d.design_name, '') AS designName,
-          COALESCE(sh.sale_no, '') AS saleNo
+          COALESCE(sh.sale_no, ph.purchase_no, '') AS saleNo
         FROM stock_ledger sl
         INNER JOIN items i ON i.id = sl.item_id
         LEFT JOIN item_groups ig ON ig.id = i.item_group_id
         LEFT JOIN item_stamps st ON st.id = sl.stamp_id
         LEFT JOIN item_designs d ON d.id = sl.design_id
-        LEFT JOIN sale_headers sh ON sh.id = sl.source_id
+        LEFT JOIN sale_headers sh ON sh.id = sl.source_id AND sl.source_type = 'SALE'
+        LEFT JOIN purchase_headers ph ON ph.id = sl.source_id AND sl.source_type = 'PURCHASE'
         WHERE i.deleted_at IS NULL
         ORDER BY sl.entry_date DESC, sl.created_at DESC
       `

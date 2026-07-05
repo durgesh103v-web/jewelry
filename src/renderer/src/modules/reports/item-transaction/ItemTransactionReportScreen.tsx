@@ -42,6 +42,7 @@ function formatDate(value: string): string {
 function getSourceLabel(sourceType: string): string {
   if (sourceType === 'OPENING_STOCK') return 'Opening Stock'
   if (sourceType === 'SALE') return 'Sale'
+  if (sourceType === 'PURCHASE') return 'Purchase'
   return sourceType
 }
 
@@ -174,6 +175,7 @@ function ItemTransactionReportScreen({ onClose }: { onClose: () => void }): Reac
                 <option value="All">All</option>
                 <option value="OPENING_STOCK">Opening Stock</option>
                 <option value="SALE">Sale</option>
+                <option value="PURCHASE">Purchase</option>
               </select>
             </div>
 

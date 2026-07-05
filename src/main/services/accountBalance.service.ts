@@ -39,7 +39,7 @@ type AccountLedgerRow = {
   anamat_nave: number
   narration: string | null
   created_at: string
-  sale_no: string | null
+  bill_no: string | null
 }
 
 type LedgerSumRow = {
@@ -223,9 +223,11 @@ export const accountBalanceService = {
           al.anamat_nave,
           al.narration,
           al.created_at,
-          sh.sale_no
+          COALESCE(sh.sale_no, ph.purchase_no, cv.voucher_no, '') AS bill_no
         FROM account_ledger al
-        LEFT JOIN sale_headers sh ON sh.id = al.source_id
+        LEFT JOIN sale_headers sh ON sh.id = al.source_id AND al.source_type IN ('SALE', 'SALE_PAYMENT')
+        LEFT JOIN purchase_headers ph ON ph.id = al.source_id AND al.source_type IN ('PURCHASE', 'PURCHASE_PAYMENT')
+        LEFT JOIN cash_vouchers cv ON cv.id = al.source_id AND al.source_type IN ('CASH_RECEIPT', 'CASH_PAYMENT')
         WHERE al.account_id = ?
         ORDER BY al.entry_date ASC, al.created_at ASC
       `
@@ -266,7 +268,8 @@ export const accountBalanceService = {
         srNo: index + 1,
         sourceType: row.source_type,
         sourceId: row.source_id,
-        saleNo: row.sale_no ?? '',
+        saleNo: row.bill_no ?? '',
+        billNo: row.bill_no ?? '',
         entryDate: row.entry_date,
         metalType: row.metal_type,
         fineJama,

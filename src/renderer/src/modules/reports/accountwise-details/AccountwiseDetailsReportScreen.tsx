@@ -34,6 +34,7 @@ type AccountLedgerDetailsRecord = {
     sourceType: string
     sourceId: string
     saleNo: string
+    billNo: string
     entryDate: string
     metalType: string
     fineJama: number
@@ -64,6 +65,24 @@ function formatNumber(value: number): string {
   return Number(value || 0)
     .toFixed(3)
     .replace(/\.?0+$/, '')
+}
+
+function getLedgerTypeLabel(sourceType: string): string {
+  if (sourceType === 'SALE') return 'Sale'
+  if (sourceType === 'SALE_PAYMENT') return 'Sale Payment'
+  if (sourceType === 'PURCHASE') return 'Purchase'
+  if (sourceType === 'PURCHASE_PAYMENT') return 'Purchase Payment'
+  if (sourceType === 'CASH_RECEIPT') return 'Cash Receipt'
+  if (sourceType === 'CASH_PAYMENT') return 'Cash Payment'
+  return sourceType
+}
+
+function getLedgerTypeClass(sourceType: string): string {
+  if (sourceType === 'CASH_RECEIPT') return 'type-badge cash-receipt'
+  if (sourceType === 'CASH_PAYMENT') return 'type-badge cash-payment'
+  if (sourceType === 'SALE' || sourceType === 'SALE_PAYMENT') return 'type-badge sale'
+  if (sourceType === 'PURCHASE' || sourceType === 'PURCHASE_PAYMENT') return 'type-badge purchase'
+  return 'type-badge'
 }
 
 function formatDate(value: string): string {
@@ -103,7 +122,7 @@ function AccountwiseDetailsReportScreen({ onClose }: { onClose: () => void }): R
     return report.rows.filter((row) => {
       return (
         row.sourceType.toLowerCase().includes(keyword) ||
-        row.saleNo.toLowerCase().includes(keyword) ||
+        (row.billNo || row.saleNo).toLowerCase().includes(keyword) ||
         row.metalType.toLowerCase().includes(keyword) ||
         row.narration.toLowerCase().includes(keyword) ||
         row.entryDate.toLowerCase().includes(keyword)
@@ -343,8 +362,12 @@ function AccountwiseDetailsReportScreen({ onClose }: { onClose: () => void }): R
                     <tr key={row.id}>
                       <td>{row.srNo}</td>
                       <td>{formatDate(row.entryDate)}</td>
-                      <td>{row.saleNo || '-'}</td>
-                      <td>{row.sourceType}</td>
+                      <td>{row.billNo || row.saleNo || '-'}</td>
+                      <td>
+                        <span className={getLedgerTypeClass(row.sourceType)}>
+                          {getLedgerTypeLabel(row.sourceType)}
+                        </span>
+                      </td>
                       <td>{row.metalType || '-'}</td>
                       <td>{formatNumber(row.fineJama)}</td>
                       <td>{formatNumber(row.fineNave)}</td>
@@ -367,7 +390,7 @@ function AccountwiseDetailsReportScreen({ onClose }: { onClose: () => void }): R
 
           <div className="screen-help-text">
             This report shows ledger movement for selected account. Nave increases balance. Jama
-            decreases balance.
+            decreases balance. Cash Payment is Nave and Cash Receipt is Jama.
           </div>
         </div>
       </div>

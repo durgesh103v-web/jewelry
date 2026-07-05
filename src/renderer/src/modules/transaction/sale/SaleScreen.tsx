@@ -1264,7 +1264,9 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
         onCancel={() => setPaymentDeleteTarget(null)}
       />
 
-      {savedSale && <SalePrintPreview sale={savedSale} onClose={() => setSavedSale(null)} />}
+      {savedSale && (
+        <SalePrintPreview sale={savedSale} autoPrintOnOpen onClose={() => setSavedSale(null)} />
+      )}
     </div>
   )
 }

@@ -119,6 +119,18 @@ export function getFriendlyErrorMessage(error: unknown): string {
     return 'Sale bill not found. Please refresh and try again.'
   }
 
+  if (lowerMessage.includes('cash voucher not found')) {
+    return 'Cash voucher not found. Please refresh and try again.'
+  }
+
+  if (lowerMessage.includes('amount must be greater than 0')) {
+    return 'Amount must be greater than 0.'
+  }
+
+  if (lowerMessage.includes('voucher date is required')) {
+    return 'Please select voucher date.'
+  }
+
   if (lowerMessage.includes('item is required')) {
     return 'Please select item.'
   }

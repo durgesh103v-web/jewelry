@@ -245,8 +245,8 @@ function AccountBalanceReportScreen({ onClose }: { onClose: () => void }): React
           </div>
 
           <div className="screen-help-text">
-            This report shows current account balance after opening balance, sale bills, Dar/Jama
-            payments, and cancelled bills.
+            This report shows current account balance after opening balance, sale bills, purchase
+            bills, Dar/Jama payments, Cash Receipt, Cash Payment, and cancelled bills.
           </div>
         </div>
       </div>
