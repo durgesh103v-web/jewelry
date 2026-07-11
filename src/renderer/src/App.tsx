@@ -1,4 +1,4 @@
-ximport { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import './App.css'
 import { appMenus } from './config/appMenus'
 import AccountGroupScreen from './modules/master/account-group/AccountGroupScreen'
