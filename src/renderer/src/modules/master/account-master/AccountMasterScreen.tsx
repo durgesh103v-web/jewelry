@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 import AppAlert from '../../../components/ui/AppAlert'
 import AppConfirmDialog from '../../../components/ui/AppConfirmDialog'
 import { getFriendlyErrorMessage } from '../../../utils/getFriendlyErrorMessage'
@@ -18,38 +17,86 @@ type Account = {
   id: string
   accountName: string
   otherName: string
+  accountType: string
   accountGroupId: string
   groupName: string
   groupType: string
-  mobileNumber: string
-  whatsappNumber: string
-  city: string
-  state: string
-  gstNo: string
-  panNo: string
   openingGoldFine: number
   openingSilverFine: number
   openingCash: number
   openingAnamat: number
   openingBank: number
+  lastDate: string
+  goldFineLimit: number
+  silverFineLimit: number
+  mobileNumber: string
+  whatsappNumber: string
+  phone2: string
+  address: string
+  city: string
+  state: string
+  gstNo: string
+  panNo: string
+  notification: string
   active: boolean
 }
+
+type AccountFormPayload = {
+  accountName: string
+  otherName: string
+  accountType: string
+  accountGroupId: string
+  openingGoldFine: number
+  openingSilverFine: number
+  openingCash: number
+  openingAnamat: number
+  openingBank: number
+  lastDate: string
+  goldFineLimit: number
+  silverFineLimit: number
+  mobileNumber: string
+  whatsappNumber: string
+  phone2: string
+  address: string
+  city: string
+  state: string
+  gstNo: string
+  panNo: string
+  notification: string
+  active: boolean
+}
+const ACCOUNT_TYPES = [
+  'Wholesale Customer',
+  'Supplier / Karagir / Dhadi',
+  'Other / Expense / Pigmi / Kharch',
+  'Bank Account',
+  'Retail Customer'
+]
+
+const today = new Date().toISOString().slice(0, 10)
 
 const initialForm = {
   accountName: '',
   otherName: '',
+  accountType: 'Wholesale Customer',
   accountGroupId: '',
-  mobileNumber: '',
-  whatsappNumber: '',
-  city: '',
-  state: '',
-  gstNo: '',
-  panNo: '',
   openingGoldFine: '',
   openingSilverFine: '',
   openingCash: '',
   openingAnamat: '',
   openingBank: '',
+  lastDate: today,
+  goldFineLimit: '',
+  silverFineLimit: '',
+  mobileNumber: '',
+  whatsappNumber: '',
+  phone2: '',
+  address: '',
+  city: '',
+  state: 'Maharashtra',
+  gstNo: '',
+  panNo: '',
+  notification: '',
   active: true
 }
 
@@ -64,70 +111,77 @@ function isValidAmountInput(value: string): boolean {
   return /^-?\d*\.?\d*$/.test(value)
 }
 
+function formatNumber(value: number): string {
+  return Number(value || 0)
+    .toFixed(3)
+    .replace(/\.?0+$/, '')
+}
+
+function formatDate(value: string): string {
+  if (!value) return '-'
+
+  const [year, month, day] = value.split('-')
+  if (!year || !month || !day) return value
+
+  return `${day}/${month}/${year}`
+}
+
 function AccountMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
   const [form, setForm] = useState(initialForm)
   const [accounts, setAccounts] = useState<Account[]>([])
   const [accountGroups, setAccountGroups] = useState<AccountGroup[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('')
   const [deleteTarget, setDeleteTarget] = useState<Account | null>(null)
+  const [formOpen, setFormOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [searchText, setSearchText] = useState('')
+  const [accountTypeFilter, setAccountTypeFilter] = useState('All')
   const [alertMessage, setAlertMessage] = useState('')
   const [alertType, setAlertType] = useState<AlertType>('success')
 
   const alertTimerRef = useRef<number | null>(null)
-  const accountNameInputRef = useRef<HTMLInputElement | null>(null)
-  const otherNameInputRef = useRef<HTMLInputElement | null>(null)
-  const accountGroupSelectRef = useRef<HTMLSelectElement | null>(null)
-  const mobileInputRef = useRef<HTMLInputElement | null>(null)
-  const whatsappInputRef = useRef<HTMLInputElement | null>(null)
-  const cityInputRef = useRef<HTMLInputElement | null>(null)
-  const stateInputRef = useRef<HTMLInputElement | null>(null)
-  const gstInputRef = useRef<HTMLInputElement | null>(null)
-  const panInputRef = useRef<HTMLInputElement | null>(null)
-  const goldFineInputRef = useRef<HTMLInputElement | null>(null)
-  const silverFineInputRef = useRef<HTMLInputElement | null>(null)
-  const cashInputRef = useRef<HTMLInputElement | null>(null)
-  const anamatInputRef = useRef<HTMLInputElement | null>(null)
-  const bankInputRef = useRef<HTMLInputElement | null>(null)
-  const activeCheckboxRef = useRef<HTMLInputElement | null>(null)
+  const accountNameRef = useRef<HTMLInputElement | null>(null)
 
   const activeGroups = useMemo(() => {
     return accountGroups.filter((group) => group.active)
   }, [accountGroups])
 
+  const selectedAccount = useMemo(() => {
+    return accounts.find((account) => account.id === selectedAccountId) || null
+  }, [accounts, selectedAccountId])
+
   const filteredAccounts = useMemo(() => {
     const keyword = searchText.trim().toLowerCase()
 
-    if (!keyword) return accounts
-
     return accounts.filter((account) => {
-      return (
+      const typeMatch = accountTypeFilter === 'All' || account.accountType === accountTypeFilter
+      const keywordMatch =
+        !keyword ||
         account.accountName.toLowerCase().includes(keyword) ||
         account.otherName.toLowerCase().includes(keyword) ||
+        account.accountType.toLowerCase().includes(keyword) ||
         account.groupName.toLowerCase().includes(keyword) ||
         account.groupType.toLowerCase().includes(keyword) ||
         account.mobileNumber.toLowerCase().includes(keyword) ||
         account.whatsappNumber.toLowerCase().includes(keyword) ||
+        account.phone2.toLowerCase().includes(keyword) ||
+        account.address.toLowerCase().includes(keyword) ||
         account.city.toLowerCase().includes(keyword) ||
         account.state.toLowerCase().includes(keyword) ||
         account.gstNo.toLowerCase().includes(keyword) ||
-        account.panNo.toLowerCase().includes(keyword)
-      )
+        account.panNo.toLowerCase().includes(keyword) ||
+        account.notification.toLowerCase().includes(keyword)
+
+      return typeMatch && keywordMatch
     })
-  }, [accounts, searchText])
+  }, [accounts, searchText, accountTypeFilter])
 
   const activeCount = useMemo(() => {
     return accounts.filter((account) => account.active).length
   }, [accounts])
-
-  const focusAccountName = useCallback((): void => {
-    window.setTimeout(() => {
-      accountNameInputRef.current?.focus()
-    }, 0)
-  }, [])
 
   const showAlert = useCallback((type: AlertType, message: string): void => {
     setAlertType(type)
@@ -142,49 +196,106 @@ function AccountMasterScreen({ onClose }: { onClose: () => void }): React.JSX.El
     }, 3000)
   }, [])
 
-  const focusNextOnEnter = (
-    event: ReactKeyboardEvent<HTMLInputElement | HTMLSelectElement>,
-    nextElement?: HTMLElement | null
-  ): void => {
-    if (event.key !== 'Enter') return
-
-    event.preventDefault()
-    nextElement?.focus()
-  }
-
   const loadAccounts = useCallback(async (): Promise<void> => {
-    const data = await window.api.accounts.list()
-    setAccounts(data)
+    const [groupData, accountData] = await Promise.all([
+      window.api.accountGroups.list(),
+      window.api.accounts.list()
+    ])
+
+    setAccountGroups(groupData)
+    setAccounts(accountData)
   }, [])
 
-  const handleNew = useCallback((): void => {
+  const focusName = useCallback((): void => {
+    window.setTimeout(() => {
+      accountNameRef.current?.focus()
+    }, 0)
+  }, [])
+
+  const openNewForm = useCallback((): void => {
     const firstActiveGroup = activeGroups[0]
 
     setEditingId(null)
+    setSelectedAccountId('')
     setAlertMessage('')
     setForm({
       ...initialForm,
-      accountGroupId: firstActiveGroup?.id ?? ''
+      lastDate: new Date().toISOString().slice(0, 10),
+      accountGroupId: firstActiveGroup?.id || ''
     })
+    setFormOpen(true)
+    focusName()
+  }, [activeGroups, focusName])
 
-    focusAccountName()
-  }, [activeGroups, focusAccountName])
+  const closeForm = useCallback((): void => {
+    setFormOpen(false)
+    setEditingId(null)
+    setForm(initialForm)
+  }, [])
+
+  const updateForm = (field: keyof typeof initialForm, value: string | boolean): void => {
+    setForm((current) => ({
+      ...current,
+      [field]: value
+    }))
+  }
+
+  const updateAmountField = (
+    field:
+      | 'openingGoldFine'
+      | 'openingSilverFine'
+      | 'openingCash'
+      | 'openingAnamat'
+      | 'openingBank'
+      | 'goldFineLimit'
+      | 'silverFineLimit',
+    value: string
+  ): void => {
+    if (!isValidAmountInput(value)) return
+    updateForm(field, value)
+  }
 
   const validateForm = useCallback((): boolean => {
     if (!form.accountName.trim()) {
       showAlert('warning', 'Please enter account name.')
-      accountNameInputRef.current?.focus()
+      accountNameRef.current?.focus()
       return false
     }
 
     if (!form.accountGroupId) {
       showAlert('warning', 'Please select account group.')
-      accountGroupSelectRef.current?.focus()
       return false
     }
 
     return true
   }, [form.accountGroupId, form.accountName, showAlert])
+
+  const buildPayload = useCallback((): AccountFormPayload => {
+    return {
+      accountName: form.accountName.trim(),
+      otherName: form.otherName.trim(),
+      accountType: form.accountType,
+      accountGroupId: form.accountGroupId,
+      openingGoldFine: toNumber(form.openingGoldFine),
+      openingSilverFine: toNumber(form.openingSilverFine),
+      openingCash: toNumber(form.openingCash),
+      openingAnamat: toNumber(form.openingAnamat),
+      openingBank: toNumber(form.openingBank),
+      lastDate: form.lastDate,
+      goldFineLimit: toNumber(form.goldFineLimit),
+      silverFineLimit: toNumber(form.silverFineLimit),
+      mobileNumber: form.mobileNumber.trim(),
+      whatsappNumber: form.whatsappNumber.trim(),
+      phone2: form.phone2.trim(),
+      address: form.address.trim(),
+      city: form.city.trim(),
+      state: form.state.trim(),
+      gstNo: form.gstNo.trim().toUpperCase(),
+      panNo: form.panNo.trim().toUpperCase(),
+      notification: form.notification.trim(),
+      active: form.active
+    }
+  }, [form])
 
   const handleSave = useCallback(async (): Promise<void> => {
     if (saving) return
@@ -193,69 +304,76 @@ function AccountMasterScreen({ onClose }: { onClose: () => void }): React.JSX.El
     try {
       setSaving(true)
 
-      const payload = {
-        ...form,
-        accountName: form.accountName.trim(),
-        otherName: form.otherName.trim(),
-        mobileNumber: form.mobileNumber.trim(),
-        whatsappNumber: form.whatsappNumber.trim(),
-        city: form.city.trim(),
-        state: form.state.trim(),
-        gstNo: form.gstNo.trim().toUpperCase(),
-        panNo: form.panNo.trim().toUpperCase(),
-        openingGoldFine: toNumber(form.openingGoldFine),
-        openingSilverFine: toNumber(form.openingSilverFine),
-        openingCash: toNumber(form.openingCash),
-        openingAnamat: toNumber(form.openingAnamat),
-        openingBank: toNumber(form.openingBank)
-      }
-
-      const successMessage = editingId
-        ? 'Account updated successfully.'
-        : 'Account saved successfully.'
+      const payload = buildPayload()
 
       if (editingId) {
         await window.api.accounts.update(editingId, payload)
+        showAlert('success', 'Account updated successfully.')
       } else {
         await window.api.accounts.create(payload)
+        showAlert('success', 'Account saved successfully.')
       }
 
       await loadAccounts()
-      handleNew()
-      showAlert('success', successMessage)
+      closeForm()
     } catch (error) {
       showAlert('error', getFriendlyErrorMessage(error))
     } finally {
       setSaving(false)
     }
-  }, [editingId, form, handleNew, loadAccounts, saving, showAlert, validateForm])
+  }, [buildPayload, closeForm, editingId, loadAccounts, saving, showAlert, validateForm])
 
-  const handleEdit = (account: Account): void => {
+  const openEditForm = (account: Account): void => {
+    setSelectedAccountId(account.id)
     setEditingId(account.id)
     setAlertMessage('')
     setForm({
-      accountName: account.accountName,
-      otherName: account.otherName,
-      accountGroupId: account.accountGroupId,
-      mobileNumber: account.mobileNumber,
-      whatsappNumber: account.whatsappNumber,
-      city: account.city,
-      state: account.state,
-      gstNo: account.gstNo,
-      panNo: account.panNo,
-      openingGoldFine: account.openingGoldFine === 0 ? '' : String(account.openingGoldFine),
-      openingSilverFine: account.openingSilverFine === 0 ? '' : String(account.openingSilverFine),
-      openingCash: account.openingCash === 0 ? '' : String(account.openingCash),
-      openingAnamat: account.openingAnamat === 0 ? '' : String(account.openingAnamat),
-      openingBank: account.openingBank === 0 ? '' : String(account.openingBank),
-      active: account.active
+      accountName: account.accountName || '',
+      otherName: account.otherName || '',
+      accountType: account.accountType || 'Wholesale Customer',
+      accountGroupId: account.accountGroupId || '',
+      openingGoldFine:
+        Number(account.openingGoldFine || 0) === 0 ? '' : String(account.openingGoldFine),
+      openingSilverFine:
+        Number(account.openingSilverFine || 0) === 0 ? '' : String(account.openingSilverFine),
+      openingCash: Number(account.openingCash || 0) === 0 ? '' : String(account.openingCash),
+      openingAnamat: Number(account.openingAnamat || 0) === 0 ? '' : String(account.openingAnamat),
+      openingBank: Number(account.openingBank || 0) === 0 ? '' : String(account.openingBank),
+      lastDate: account.lastDate || new Date().toISOString().slice(0, 10),
+      goldFineLimit: Number(account.goldFineLimit || 0) === 0 ? '' : String(account.goldFineLimit),
+      silverFineLimit:
+        Number(account.silverFineLimit || 0) === 0 ? '' : String(account.silverFineLimit),
+      mobileNumber: account.mobileNumber || '',
+      whatsappNumber: account.whatsappNumber || '',
+      phone2: account.phone2 || '',
+      address: account.address || '',
+      city: account.city || '',
+      state: account.state || 'Maharashtra',
+      gstNo: account.gstNo || '',
+      panNo: account.panNo || '',
+      notification: account.notification || '',
+      active: Boolean(account.active)
     })
-
-    focusAccountName()
+    setFormOpen(true)
+    focusName()
   }
 
-  const requestDelete = (account: Account): void => {
-    setDeleteTarget(account)
+  const handleToolbarEdit = (): void => {
+    if (!selectedAccount) {
+      showAlert('warning', 'Please select an account to edit.')
+      return
+    }
+
+    openEditForm(selectedAccount)
+  }
+
+  const handleToolbarDelete = (): void => {
+    if (!selectedAccount) {
+      showAlert('warning', 'Please select an account to delete.')
+      return
+    }
+
+    setDeleteTarget(selectedAccount)
   }
 
   const handleConfirmDelete = async (): Promise<void> => {
@@ -267,10 +385,11 @@ function AccountMasterScreen({ onClose }: { onClose: () => void }): React.JSX.El
       await window.api.accounts.remove(deleteTarget.id)
 
       if (editingId === deleteTarget.id) {
-        handleNew()
+        closeForm()
       }
 
       setDeleteTarget(null)
+      setSelectedAccountId('')
       await loadAccounts()
       showAlert('success', 'Account deleted successfully.')
     } catch (error) {
@@ -280,10 +399,9 @@ function AccountMasterScreen({ onClose }: { onClose: () => void }): React.JSX.El
     }
   }
 
-  const handleCancelDelete = useCallback((): void => {
-    if (deleting) return
-    setDeleteTarget(null)
-  }, [deleting])
+  const handlePrint = (): void => {
+    window.print()
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -294,23 +412,17 @@ function AccountMasterScreen({ onClose }: { onClose: () => void }): React.JSX.El
 
         setAccountGroups(groupData)
         setAccounts(accountData)
-
-        const firstActiveGroup = groupData.find((group) => group.active)
-        if (firstActiveGroup) {
-          setForm((current) => ({
-            ...current,
-            accountGroupId: current.accountGroupId || firstActiveGroup.id
-          }))
-        }
       })
       .catch((error: unknown) => {
-        if (!cancelled) showAlert('error', getFriendlyErrorMessage(error))
+        if (!cancelled) {
+          showAlert('error', getFriendlyErrorMessage(error))
+        }
       })
       .finally(() => {
-        if (!cancelled) setLoading(false)
+        if (!cancelled) {
+          setLoading(false)
+        }
       })
-
-    focusAccountName()
 
     return () => {
       cancelled = true
@@ -319,28 +431,28 @@ function AccountMasterScreen({ onClose }: { onClose: () => void }): React.JSX.El
         window.clearTimeout(alertTimerRef.current)
       }
     }
-  }, [focusAccountName, showAlert])
+  }, [showAlert])
 
   useEffect(() => {
     const handleKeyboard = (event: KeyboardEvent): void => {
       if (event.ctrlKey && event.key.toLowerCase() === 'n') {
         event.preventDefault()
-        handleNew()
+        openNewForm()
       }
 
-      if (event.ctrlKey && event.key.toLowerCase() === 's') {
+      if (event.ctrlKey && event.key.toLowerCase() === 's' && formOpen) {
         event.preventDefault()
         void handleSave()
       }
 
       if (event.key === 'Escape') {
-        if (deleteTarget) {
-          handleCancelDelete()
+        if (deleteTarget && !deleting) {
+          setDeleteTarget(null)
           return
         }
 
-        if (editingId) {
-          handleNew()
+        if (formOpen) {
+          closeForm()
         }
       }
     }
@@ -350,11 +462,11 @@ function AccountMasterScreen({ onClose }: { onClose: () => void }): React.JSX.El
     return () => {
       window.removeEventListener('keydown', handleKeyboard)
     }
-  }, [deleteTarget, editingId, handleCancelDelete, handleNew, handleSave])
+  }, [closeForm, deleteTarget, deleting, formOpen, handleSave, openNewForm])
 
   return (
     <div className="account-master-screen">
-      <div className="account-master-window">
+      <div className="account-master-window account-master-modern-window">
         <div className="form-title-bar">
           <span>Account Master</span>
 
@@ -366,441 +478,432 @@ function AccountMasterScreen({ onClose }: { onClose: () => void }): React.JSX.El
         <div className="account-master-body">
           <AppAlert type={alertType} message={alertMessage} onClose={() => setAlertMessage('')} />
 
-          <div className="account-master-form-panel">
-            <div className="section-title">Basic Details</div>
+          <div className="account-master-top-actions no-print">
+            <button className="account-action-new" type="button" onClick={openNewForm}>
+              Add New
+            </button>
 
-            <div className="account-form-grid">
-              <div className="form-field">
-                <label htmlFor="account-master-name">Account Name</label>
-                <input
-                  id="account-master-name"
-                  ref={accountNameInputRef}
-                  value={form.accountName}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      accountName: event.target.value
-                    }))
-                  }
-                  onKeyDown={(event) => focusNextOnEnter(event, otherNameInputRef.current)}
-                  placeholder="Enter account name"
-                />
-              </div>
+            <button className="account-action-btn" type="button" onClick={handleToolbarEdit}>
+              Edit
+            </button>
 
-              <div className="form-field">
-                <label htmlFor="account-master-other-name">Other Name</label>
-                <input
-                  id="account-master-other-name"
-                  ref={otherNameInputRef}
-                  value={form.otherName}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      otherName: event.target.value
-                    }))
-                  }
-                  onKeyDown={(event) => focusNextOnEnter(event, accountGroupSelectRef.current)}
-                  placeholder="Optional"
-                />
-              </div>
+            <button className="account-action-btn" type="button" onClick={handlePrint}>
+              Print
+            </button>
 
-              <div className="form-field">
-                <label htmlFor="account-master-group">Account Group</label>
-                <select
-                  id="account-master-group"
-                  ref={accountGroupSelectRef}
-                  value={form.accountGroupId}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      accountGroupId: event.target.value
-                    }))
-                  }
-                  onKeyDown={(event) => focusNextOnEnter(event, mobileInputRef.current)}
-                >
-                  <option value="">Select Group</option>
-                  {activeGroups.map((group) => (
-                    <option key={group.id} value={group.id}>
-                      {group.groupName} - {group.groupType}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <button className="account-action-danger" type="button" onClick={handleToolbarDelete}>
+              Delete
+            </button>
 
-              <div className="form-field">
-                <label htmlFor="account-master-mobile">Mobile No.</label>
-                <input
-                  id="account-master-mobile"
-                  ref={mobileInputRef}
-                  value={form.mobileNumber}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      mobileNumber: event.target.value
-                    }))
-                  }
-                  onKeyDown={(event) => focusNextOnEnter(event, whatsappInputRef.current)}
-                  placeholder="Mobile number"
-                />
-              </div>
+            <button className="account-action-btn" type="button" onClick={onClose}>
+              Exit
+            </button>
 
-              <div className="form-field">
-                <label htmlFor="account-master-whatsapp">WhatsApp No.</label>
-                <input
-                  id="account-master-whatsapp"
-                  ref={whatsappInputRef}
-                  value={form.whatsappNumber}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      whatsappNumber: event.target.value
-                    }))
-                  }
-                  onKeyDown={(event) => focusNextOnEnter(event, cityInputRef.current)}
-                  placeholder="WhatsApp number"
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="account-master-city">City</label>
-                <input
-                  id="account-master-city"
-                  ref={cityInputRef}
-                  value={form.city}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      city: event.target.value
-                    }))
-                  }
-                  onKeyDown={(event) => focusNextOnEnter(event, stateInputRef.current)}
-                  placeholder="City"
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="account-master-state">State</label>
-                <input
-                  id="account-master-state"
-                  ref={stateInputRef}
-                  value={form.state}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      state: event.target.value
-                    }))
-                  }
-                  onKeyDown={(event) => focusNextOnEnter(event, gstInputRef.current)}
-                  placeholder="State"
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="account-master-gst">GST No.</label>
-                <input
-                  id="account-master-gst"
-                  ref={gstInputRef}
-                  value={form.gstNo}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      gstNo: event.target.value.toUpperCase()
-                    }))
-                  }
-                  onKeyDown={(event) => focusNextOnEnter(event, panInputRef.current)}
-                  placeholder="GST number"
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="account-master-pan">PAN No.</label>
-                <input
-                  id="account-master-pan"
-                  ref={panInputRef}
-                  value={form.panNo}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      panNo: event.target.value.toUpperCase()
-                    }))
-                  }
-                  onKeyDown={(event) => focusNextOnEnter(event, goldFineInputRef.current)}
-                  placeholder="PAN number"
-                />
-              </div>
-            </div>
-
-            <div className="section-title">Opening Balance</div>
-
-            <div className="balance-grid">
-              <div className="form-field">
-                <label htmlFor="account-master-gold-fine">Gold Fine</label>
-                <input
-                  id="account-master-gold-fine"
-                  ref={goldFineInputRef}
-                  type="text"
-                  inputMode="decimal"
-                  value={form.openingGoldFine}
-                  onChange={(event) => {
-                    const value = event.target.value
-
-                    if (isValidAmountInput(value)) {
-                      setForm((current) => ({
-                        ...current,
-                        openingGoldFine: value
-                      }))
-                    }
-                  }}
-                  onKeyDown={(event) => focusNextOnEnter(event, silverFineInputRef.current)}
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="account-master-silver-fine">Silver Fine</label>
-                <input
-                  id="account-master-silver-fine"
-                  ref={silverFineInputRef}
-                  type="text"
-                  inputMode="decimal"
-                  value={form.openingSilverFine}
-                  onChange={(event) => {
-                    const value = event.target.value
-
-                    if (isValidAmountInput(value)) {
-                      setForm((current) => ({
-                        ...current,
-                        openingSilverFine: value
-                      }))
-                    }
-                  }}
-                  onKeyDown={(event) => focusNextOnEnter(event, cashInputRef.current)}
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="account-master-cash">Cash</label>
-                <input
-                  id="account-master-cash"
-                  ref={cashInputRef}
-                  type="text"
-                  inputMode="decimal"
-                  value={form.openingCash}
-                  onChange={(event) => {
-                    const value = event.target.value
-
-                    if (isValidAmountInput(value)) {
-                      setForm((current) => ({
-                        ...current,
-                        openingCash: value
-                      }))
-                    }
-                  }}
-                  onKeyDown={(event) => focusNextOnEnter(event, anamatInputRef.current)}
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="account-master-anamat">Anamat</label>
-                <input
-                  id="account-master-anamat"
-                  ref={anamatInputRef}
-                  type="text"
-                  inputMode="decimal"
-                  value={form.openingAnamat}
-                  onChange={(event) => {
-                    const value = event.target.value
-
-                    if (isValidAmountInput(value)) {
-                      setForm((current) => ({
-                        ...current,
-                        openingAnamat: value
-                      }))
-                    }
-                  }}
-                  onKeyDown={(event) => focusNextOnEnter(event, bankInputRef.current)}
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="account-master-bank">Bank</label>
-                <input
-                  id="account-master-bank"
-                  ref={bankInputRef}
-                  type="text"
-                  inputMode="decimal"
-                  value={form.openingBank}
-                  onChange={(event) => {
-                    const value = event.target.value
-
-                    if (isValidAmountInput(value)) {
-                      setForm((current) => ({
-                        ...current,
-                        openingBank: value
-                      }))
-                    }
-                  }}
-                  onKeyDown={(event) => focusNextOnEnter(event, activeCheckboxRef.current)}
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="form-field active-field">
-                <label htmlFor="account-master-active">Active</label>
-                <input
-                  id="account-master-active"
-                  ref={activeCheckboxRef}
-                  type="checkbox"
-                  checked={form.active}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      active: event.target.checked
-                    }))
-                  }
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault()
-                      void handleSave()
-                    }
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="button-row account-button-row">
-              <button className="btn-new" type="button" onClick={handleNew} disabled={saving}>
-                New
-              </button>
-
-              <button
-                className="btn-save"
-                type="button"
-                onClick={() => void handleSave()}
-                disabled={saving}
-              >
-                {saving ? 'Saving...' : editingId ? 'Update' : 'Save'}
-              </button>
-
-              {editingId && (
-                <button
-                  className="btn-cancel-edit"
-                  type="button"
-                  onClick={handleNew}
-                  disabled={saving}
-                >
-                  Cancel Edit
-                </button>
-              )}
+            <div className="account-master-action-info">
+              Selected: <strong>{selectedAccount ? selectedAccount.accountName : 'None'}</strong>
             </div>
           </div>
 
-          <div className="list-toolbar">
-            <div className="list-search">
-              <label htmlFor="account-master-search">Search</label>
+          {formOpen ? (
+            <div className="account-master-modern-form">
+              <div className="account-master-form-header">
+                <div>
+                  <h3>{editingId ? 'Edit Account' : 'Add New Account'}</h3>
+                  <p>Enter account details, opening balance, limits, and contact information.</p>
+                </div>
 
-              <input
-                id="account-master-search"
-                value={searchText}
-                onChange={(event) => setSearchText(event.target.value)}
-                placeholder="Search account, group, mobile, city, GST, PAN"
-              />
+                <div className="account-form-header-actions">
+                  <button
+                    className="btn-save"
+                    type="button"
+                    onClick={() => void handleSave()}
+                    disabled={saving}
+                  >
+                    {saving ? 'Saving...' : editingId ? 'Update Account' : 'Save Account'}
+                  </button>
 
-              {searchText && (
-                <button
-                  className="search-clear-btn"
-                  type="button"
-                  onClick={() => setSearchText('')}
-                >
-                  &times;
-                </button>
-              )}
-            </div>
+                  <button
+                    className="btn-cancel-edit"
+                    type="button"
+                    onClick={closeForm}
+                    disabled={saving}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
 
-            <div className="record-summary">
-              Total: <strong>{accounts.length}</strong> | Active: <strong>{activeCount}</strong> |
-              Showing: <strong>{filteredAccounts.length}</strong>
-            </div>
-          </div>
+              <div className="account-section-card">
+                <div className="section-title">Basic Details</div>
 
-          <div className="table-panel account-table-panel">
-            <table>
-              <thead>
-                <tr>
-                  <th>Sr</th>
-                  <th>Account Name</th>
-                  <th>Group</th>
-                  <th>Mobile</th>
-                  <th>City</th>
-                  <th>Silver Fine</th>
-                  <th>Cash</th>
-                  <th>Active</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
+                <div className="account-modern-grid">
+                  <div className="form-field account-name-field">
+                    <label>Name</label>
+                    <input
+                      ref={accountNameRef}
+                      value={form.accountName}
+                      onChange={(event) => updateForm('accountName', event.target.value)}
+                      placeholder="Enter account name"
+                    />
+                  </div>
 
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={9} className="empty-row">
-                      Loading accounts...
-                    </td>
-                  </tr>
-                ) : filteredAccounts.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="empty-row">
-                      {searchText ? 'No matching account found.' : 'No account added yet.'}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredAccounts.map((account, index) => (
-                    <tr
-                      key={account.id}
-                      className={editingId === account.id ? 'selected-row' : ''}
-                      onDoubleClick={() => handleEdit(account)}
+                  <div className="form-field">
+                    <label>Other Name</label>
+                    <input
+                      value={form.otherName}
+                      onChange={(event) => updateForm('otherName', event.target.value)}
+                      placeholder="Optional"
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Account Type</label>
+                    <select
+                      value={form.accountType}
+                      onChange={(event) => updateForm('accountType', event.target.value)}
                     >
-                      <td>{index + 1}</td>
-                      <td>{account.accountName}</td>
-                      <td>{account.groupName}</td>
-                      <td>{account.mobileNumber || '-'}</td>
-                      <td>{account.city || '-'}</td>
-                      <td>{account.openingSilverFine}</td>
-                      <td>{account.openingCash}</td>
-                      <td>
-                        <span className={account.active ? 'status-active' : 'status-inactive'}>
-                          {account.active ? 'Yes' : 'No'}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="table-edit"
-                          type="button"
-                          onClick={() => handleEdit(account)}
-                        >
-                          Edit
-                        </button>
+                      {ACCOUNT_TYPES.map((type) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                        <button
-                          className="table-delete"
-                          type="button"
-                          onClick={() => requestDelete(account)}
-                        >
-                          Delete
-                        </button>
-                      </td>
+                  <div className="form-field">
+                    <label>Account Group</label>
+                    <select
+                      value={form.accountGroupId}
+                      onChange={(event) => updateForm('accountGroupId', event.target.value)}
+                    >
+                      <option value="">Select Group</option>
+                      {activeGroups.map((group) => (
+                        <option key={group.id} value={group.id}>
+                          {group.groupName} - {group.groupType}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="account-section-card">
+                <div className="section-title">Opening Balance</div>
+
+                <div className="account-balance-modern-grid">
+                  <div className="form-field">
+                    <label>Gold Fine</label>
+                    <input
+                      value={form.openingGoldFine}
+                      inputMode="decimal"
+                      onChange={(event) => updateAmountField('openingGoldFine', event.target.value)}
+                      placeholder="0 or -8000"
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Silver Fine</label>
+                    <input
+                      value={form.openingSilverFine}
+                      inputMode="decimal"
+                      onChange={(event) =>
+                        updateAmountField('openingSilverFine', event.target.value)
+                      }
+                      placeholder="0 or -8000"
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Cash</label>
+                    <input
+                      value={form.openingCash}
+                      inputMode="decimal"
+                      onChange={(event) => updateAmountField('openingCash', event.target.value)}
+                      placeholder="0 or -8000"
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Anamat</label>
+                    <input
+                      value={form.openingAnamat}
+                      inputMode="decimal"
+                      onChange={(event) => updateAmountField('openingAnamat', event.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Bank</label>
+                    <input
+                      value={form.openingBank}
+                      inputMode="decimal"
+                      onChange={(event) => updateAmountField('openingBank', event.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Last Date</label>
+                    <input
+                      type="date"
+                      value={form.lastDate}
+                      onChange={(event) => updateForm('lastDate', event.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Gold Fine Limit</label>
+                    <input
+                      value={form.goldFineLimit}
+                      inputMode="decimal"
+                      onChange={(event) => updateAmountField('goldFineLimit', event.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Silver Fine Limit</label>
+                    <input
+                      value={form.silverFineLimit}
+                      inputMode="decimal"
+                      onChange={(event) => updateAmountField('silverFineLimit', event.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="account-section-card">
+                <div className="section-title">Contact Details</div>
+
+                <div className="account-modern-grid">
+                  <div className="form-field">
+                    <label>WhatsApp Number</label>
+                    <input
+                      value={form.whatsappNumber}
+                      onChange={(event) => updateForm('whatsappNumber', event.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Phone 2</label>
+                    <input
+                      value={form.phone2}
+                      onChange={(event) => updateForm('phone2', event.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-field account-address-field">
+                    <label>Address</label>
+                    <textarea
+                      value={form.address}
+                      onChange={(event) => updateForm('address', event.target.value)}
+                      placeholder="Full address"
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>City</label>
+                    <input
+                      value={form.city}
+                      onChange={(event) => updateForm('city', event.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>State</label>
+                    <input
+                      value={form.state}
+                      onChange={(event) => updateForm('state', event.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="account-section-card">
+                <div className="section-title">Tax / Other Details</div>
+
+                <div className="account-modern-grid">
+                  <div className="form-field">
+                    <label>GST No.</label>
+                    <input
+                      value={form.gstNo}
+                      onChange={(event) => updateForm('gstNo', event.target.value.toUpperCase())}
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>PAN No.</label>
+                    <input
+                      value={form.panNo}
+                      onChange={(event) => updateForm('panNo', event.target.value.toUpperCase())}
+                    />
+                  </div>
+
+                  <div className="form-field account-notification-field">
+                    <label>Notification</label>
+                    <input
+                      value={form.notification}
+                      onChange={(event) => updateForm('notification', event.target.value)}
+                      placeholder="Reminder or note"
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label>Active</label>
+                    <select
+                      value={form.active ? 'Yes' : 'No'}
+                      onChange={(event) => updateForm('active', event.target.value === 'Yes')}
+                    >
+                      <option>Yes</option>
+                      <option>No</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="account-master-summary-row">
+                <div>
+                  <span>Total Accounts</span>
+                  <strong>{accounts.length}</strong>
+                </div>
+
+                <div>
+                  <span>Active</span>
+                  <strong>{activeCount}</strong>
+                </div>
+
+                <div>
+                  <span>Showing</span>
+                  <strong>{filteredAccounts.length}</strong>
+                </div>
+
+                <div>
+                  <span>Mode</span>
+                  <strong>List</strong>
+                </div>
+              </div>
+
+              <div className="list-toolbar account-master-list-toolbar no-print">
+                <div className="form-field">
+                  <label>Account Type</label>
+                  <select
+                    value={accountTypeFilter}
+                    onChange={(event) => setAccountTypeFilter(event.target.value)}
+                  >
+                    <option value="All">All Types</option>
+                    {ACCOUNT_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="list-search">
+                  <label>Search</label>
+                  <input
+                    value={searchText}
+                    onChange={(event) => setSearchText(event.target.value)}
+                    placeholder="Search account, mobile, type, city, GST, PAN"
+                  />
+
+                  {searchText && (
+                    <button
+                      className="search-clear-btn"
+                      type="button"
+                      onClick={() => setSearchText('')}
+                    >
+                      &times;
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="table-panel account-table-panel account-master-print-area">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Sr</th>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Group</th>
+                      <th>Gold Fine</th>
+                      <th>Silver Fine</th>
+                      <th>Cash</th>
+                      <th>Anamat</th>
+                      <th>Bank</th>
+                      <th>Last Date</th>
+                      <th>Mobile</th>
+                      <th>City</th>
+                      <th>Active</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
 
-          <div className="screen-help-text">
-            Tip: Double-click a row to edit. Press Enter to move through the form.
-          </div>
+                  <tbody>
+                    {loading ? (
+                      <tr>
+                        <td colSpan={13} className="empty-row">
+                          Loading accounts...
+                        </td>
+                      </tr>
+                    ) : filteredAccounts.length === 0 ? (
+                      <tr>
+                        <td colSpan={13} className="empty-row">
+                          {searchText ? 'No matching account found.' : 'No account added yet.'}
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredAccounts.map((account, index) => (
+                        <tr
+                          key={account.id}
+                          className={selectedAccountId === account.id ? 'selected-row' : ''}
+                          onClick={() => setSelectedAccountId(account.id)}
+                          onDoubleClick={() => openEditForm(account)}
+                        >
+                          <td>{index + 1}</td>
+                          <td>
+                            <strong>{account.accountName}</strong>
+                            {account.otherName && (
+                              <div className="account-sub-text">{account.otherName}</div>
+                            )}
+                          </td>
+                          <td>{account.accountType || '-'}</td>
+                          <td>{account.groupName || '-'}</td>
+                          <td>{formatNumber(account.openingGoldFine)}</td>
+                          <td>{formatNumber(account.openingSilverFine)}</td>
+                          <td>{formatNumber(account.openingCash)}</td>
+                          <td>{formatNumber(account.openingAnamat)}</td>
+                          <td>{formatNumber(account.openingBank)}</td>
+                          <td>{formatDate(account.lastDate)}</td>
+                          <td>
+                            {account.whatsappNumber || account.mobileNumber || '-'}
+                            {account.phone2 && (
+                              <div className="account-sub-text">P2: {account.phone2}</div>
+                            )}
+                          </td>
+                          <td>{account.city || '-'}</td>
+                          <td>
+                            <span className={account.active ? 'status-active' : 'status-inactive'}>
+                              {account.active ? 'Yes' : 'No'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="screen-help-text no-print">
+                Click a row to select. Double-click to edit. Opening balances support positive and
+                negative values like 8000 or -8000.
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -808,16 +911,18 @@ function AccountMasterScreen({ onClose }: { onClose: () => void }): React.JSX.El
         open={Boolean(deleteTarget)}
         title="Delete Account?"
         message={
-          deleteTarget
-            ? `Are you sure you want to delete "${deleteTarget.accountName}"? This action cannot be undone.`
-            : ''
+          deleteTarget ? `Are you sure you want to delete "${deleteTarget.accountName}"?` : ''
         }
         confirmText="Delete"
         cancelText="Cancel"
         type="danger"
         loading={deleting}
         onConfirm={() => void handleConfirmDelete()}
-        onCancel={handleCancelDelete}
+        onCancel={() => {
+          if (!deleting) {
+            setDeleteTarget(null)
+          }
+        }}
       />
     </div>
   )

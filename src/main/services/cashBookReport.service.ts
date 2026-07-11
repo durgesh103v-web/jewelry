@@ -58,7 +58,18 @@ export function getCashBookReport(filter: CashBookReportFilter = {}): CashBookRe
     )
     .get(fromDate, ...allowedSources) as { opening_balance: number } | undefined
 
-  const openingBalance = Number(openingRow?.opening_balance || 0)
+  const openingCashRow = db
+    .prepare(
+      `
+      SELECT opening_cash AS openingCash
+      FROM cash_fine_opening_settings
+      WHERE id = 'default-cash-fine-opening'
+    `
+    )
+    .get() as { openingCash: number } | undefined
+
+  const openingCash = Number(openingCashRow?.openingCash || 0)
+  const openingBalance = openingCash + Number(openingRow?.opening_balance || 0)
 
   const ledgerRows = db
     .prepare(

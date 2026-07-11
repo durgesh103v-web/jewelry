@@ -62,7 +62,8 @@ type ItemOpeningStockPayload = {
   tanch: number
   wastage: number
   hishob: number
-  unit: string
+  unit: 'Kg' | 'Gm' | 'Pcs'
+  majuriRate: number
   active: boolean
 }
 
@@ -269,6 +270,45 @@ type CashVoucherRecord = {
   narration: string
   createdAt: string
   updatedAt: string
+}
+
+type CashFineOpeningLinePayload = {
+  metalType: 'Gold' | 'Silver'
+  entryType: string
+  details: string
+  weight: number
+  tanch: number
+  ptStatus: string
+}
+
+type CashFineOpeningSummaryPayload = {
+  goldPurchaseFine: number
+  goldPurchaseAmount: number
+  goldSaleFine: number
+  goldSaleAmount: number
+  silverPurchaseFine: number
+  silverPurchaseAmount: number
+  silverSaleFine: number
+  silverSaleAmount: number
+  openingCash: number
+}
+
+type CashFineOpeningRecord = {
+  summary: CashFineOpeningSummaryPayload
+  lines: Array<
+    CashFineOpeningLinePayload & {
+      id: string
+      lineNo: number
+      fine: number
+      createdAt: string
+      updatedAt: string
+    }
+  >
+}
+
+type CashFineOpeningPayload = {
+  lines: CashFineOpeningLinePayload[]
+  summary: CashFineOpeningSummaryPayload
 }
 type AccountBalanceRecord = {
   goldFine: number
@@ -523,7 +563,14 @@ type BackupResult = {
   cancelled: boolean
   fileName?: string
   backupPath?: string
+  backupAt?: string
   message: string
+}
+
+type LastBackupInfo = {
+  backupAt: string
+  fileName: string
+  backupPath: string
 }
 
 type FirmPayload = {
@@ -574,18 +621,25 @@ type PrinterSettingRecord = PrinterSettingPayload & {
 type AccountPayload = {
   accountName: string
   otherName: string
+  accountType: string
   accountGroupId: string
   mobileNumber: string
   whatsappNumber: string
+  phone2: string
+  address: string
   city: string
   state: string
   gstNo: string
   panNo: string
+  lastDate: string
   openingGoldFine: number
   openingSilverFine: number
   openingCash: number
   openingAnamat: number
   openingBank: number
+  goldFineLimit: number
+  silverFineLimit: number
+  notification: string
   active: boolean
 }
 
@@ -689,6 +743,12 @@ const api = {
     list: (filter?: CashVoucherFilter): Promise<CashVoucherRecord[]> =>
       ipcRenderer.invoke('cash-vouchers:list', filter)
   },
+
+  cashFineOpening: {
+    get: (): Promise<CashFineOpeningRecord> => ipcRenderer.invoke('cash-fine-opening:get'),
+    save: (payload: CashFineOpeningPayload): Promise<CashFineOpeningRecord> =>
+      ipcRenderer.invoke('cash-fine-opening:save', payload)
+  },
   sales: {
     getNextNumber: () => ipcRenderer.invoke('sales:next-number'),
 
@@ -749,6 +809,7 @@ const api = {
 
   backup: {
     create: (): Promise<BackupResult> => ipcRenderer.invoke('backup:create'),
+    getLast: (): Promise<LastBackupInfo> => ipcRenderer.invoke('backup:get-last'),
     restore: (): Promise<BackupResult> => ipcRenderer.invoke('backup:restore')
   },
 

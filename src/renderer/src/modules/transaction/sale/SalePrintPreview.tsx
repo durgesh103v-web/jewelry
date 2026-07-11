@@ -296,14 +296,7 @@ function SalePrintPreview({
                     )}
 
                     <tr className="print-total-row">
-                      <td colSpan={2}>Total</td>
-                      <td>{formatQty(itemTotals.pcs)}</td>
-                      <td>{formatWeight(itemTotals.grossWeight)}</td>
-                      <td>{formatWeight(itemTotals.lessWeight)}</td>
-                      <td>{formatWeight(itemTotals.netWeight)}</td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
+                      <td colSpan={9}>Total</td>
                       <td>{formatWeight(header.item_fine_total || itemTotals.fine)}</td>
                       <td></td>
                       <td>{formatAmount(header.item_majuri_total || itemTotals.majuri)}</td>

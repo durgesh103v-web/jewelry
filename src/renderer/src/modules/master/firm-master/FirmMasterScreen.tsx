@@ -115,6 +115,7 @@ function FirmMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
       })
 
       showAlert('success', 'Firm details saved successfully.')
+      window.dispatchEvent(new CustomEvent('erp:firm-updated'))
       await loadFirm()
     } catch (error) {
       showAlert('error', getFriendlyErrorMessage(error))

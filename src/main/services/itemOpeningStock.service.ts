@@ -2,7 +2,27 @@ import dayjs from 'dayjs'
 import { v4 as uuidv4 } from 'uuid'
 import { z } from 'zod'
 import { getDatabase } from '../database/connection'
-import { calculateFine, calculateNetWeight } from './jewelleryFormula.service'
+import {
+  calculateFine,
+  calculateHishob,
+  calculateMajuri,
+  calculateNetWeight
+} from './jewelleryFormula.service'
+
+const openingStockUnitSchema = z.preprocess(
+  (value) => {
+    const unit = String(value || 'Kg')
+      .trim()
+      .toUpperCase()
+
+    if (unit === 'GM') return 'Gm'
+    if (unit === 'KG') return 'Kg'
+    if (unit === 'PCS') return 'Pcs'
+
+    return value
+  },
+  z.enum(['Kg', 'Gm', 'Pcs'])
+)
 
 const openingStockSchema = z.object({
   stockDate: z.string().trim().optional().default(''),
@@ -18,7 +38,8 @@ const openingStockSchema = z.object({
   tanch: z.coerce.number().default(0),
   wastage: z.coerce.number().default(0),
   hishob: z.coerce.number().default(0),
-  unit: z.string().trim().optional().default('GM'),
+  unit: openingStockUnitSchema.default('Kg'),
+  majuriRate: z.coerce.number().default(0),
   active: z.boolean().default(true)
 })
 
@@ -51,6 +72,8 @@ type OpeningStockRow = {
   hishob: number
   unit: string | null
   fine: number
+  majuri_rate: number
+  majuri: number
   active: number
   created_at: string
   updated_at: string
@@ -76,8 +99,10 @@ type OpeningStockRecord = {
   tanch: number
   wastage: number
   hishob: number
-  unit: string
+  unit: 'Kg' | 'Gm' | 'Pcs'
   fine: number
+  majuriRate: number
+  majuri: number
   active: boolean
   createdAt: string
   updatedAt: string
@@ -85,6 +110,17 @@ type OpeningStockRecord = {
 
 function emptyToNull(value: string): string | null {
   return value.trim() ? value.trim() : null
+}
+
+function normalizeOpeningStockUnit(unit: string | null): 'Kg' | 'Gm' | 'Pcs' {
+  const normalized = String(unit || 'Kg')
+    .trim()
+    .toUpperCase()
+
+  if (normalized === 'GM') return 'Gm'
+  if (normalized === 'PCS') return 'Pcs'
+
+  return 'Kg'
 }
 
 function mapRow(row: OpeningStockRow): OpeningStockRecord {
@@ -108,8 +144,10 @@ function mapRow(row: OpeningStockRow): OpeningStockRecord {
     tanch: Number(row.tanch ?? 0),
     wastage: Number(row.wastage ?? 0),
     hishob: Number(row.hishob ?? 0),
-    unit: row.unit ?? 'GM',
+    unit: normalizeOpeningStockUnit(row.unit),
     fine: Number(row.fine ?? 0),
+    majuriRate: Number(row.majuri_rate ?? 0),
+    majuri: Number(row.majuri ?? 0),
     active: Boolean(row.active),
     createdAt: row.created_at,
     updatedAt: row.updated_at
@@ -166,6 +204,8 @@ export const itemOpeningStockService = {
           os.hishob,
           os.unit,
           os.fine,
+          os.majuri_rate,
+          os.majuri,
           os.active,
           os.created_at,
           os.updated_at
@@ -188,7 +228,14 @@ export const itemOpeningStockService = {
     const item = getItemMeta(data.itemId)
 
     const netWeight = calculateNetWeight(data.grossWeight, data.lessWeight, data.addWeight)
+    const hishob = calculateHishob(data.tanch, data.wastage)
     const fine = calculateFine(netWeight, data.tanch, data.wastage)
+    const majuri = calculateMajuri({
+      netWeight,
+      pcs: data.pcs,
+      labourRate: data.majuriRate,
+      labourRateType: data.unit
+    })
 
     const now = dayjs().format('YYYY-MM-DD HH:mm:ss')
     const stockDate = data.stockDate || dayjs().format('YYYY-MM-DD')
@@ -216,11 +263,13 @@ export const itemOpeningStockService = {
           hishob,
           unit,
           fine,
+          majuri_rate,
+          majuri,
           active,
           created_at,
           updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `
       ).run(
         id,
@@ -237,9 +286,11 @@ export const itemOpeningStockService = {
         netWeight,
         data.tanch,
         data.wastage,
-        data.hishob,
-        data.unit || 'GM',
+        hishob,
+        data.unit,
         fine,
+        data.majuriRate,
+        majuri,
         data.active ? 1 : 0,
         now,
         now
@@ -309,7 +360,14 @@ export const itemOpeningStockService = {
     }
 
     const netWeight = calculateNetWeight(data.grossWeight, data.lessWeight, data.addWeight)
+    const hishob = calculateHishob(data.tanch, data.wastage)
     const fine = calculateFine(netWeight, data.tanch, data.wastage)
+    const majuri = calculateMajuri({
+      netWeight,
+      pcs: data.pcs,
+      labourRate: data.majuriRate,
+      labourRateType: data.unit
+    })
 
     const now = dayjs().format('YYYY-MM-DD HH:mm:ss')
     const stockDate = data.stockDate || dayjs().format('YYYY-MM-DD')
@@ -336,6 +394,8 @@ export const itemOpeningStockService = {
           hishob = ?,
           unit = ?,
           fine = ?,
+          majuri_rate = ?,
+          majuri = ?,
           active = ?,
           updated_at = ?
         WHERE id = ?
@@ -354,9 +414,11 @@ export const itemOpeningStockService = {
         netWeight,
         data.tanch,
         data.wastage,
-        data.hishob,
-        data.unit || 'GM',
+        hishob,
+        data.unit,
         fine,
+        data.majuriRate,
+        majuri,
         data.active ? 1 : 0,
         now,
         id
@@ -469,6 +531,8 @@ export const itemOpeningStockService = {
           os.hishob,
           os.unit,
           os.fine,
+          os.majuri_rate,
+          os.majuri,
           os.active,
           os.created_at,
           os.updated_at

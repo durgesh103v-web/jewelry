@@ -10,6 +10,41 @@ function safeDelete(path: string): void {
   }
 }
 
+function setAppSetting(key: string, value: string): void {
+  const db = getDatabase()
+  const now = dayjs().format('YYYY-MM-DD HH:mm:ss')
+
+  db.prepare(
+    `
+    INSERT INTO app_settings (
+      key,
+      value,
+      updated_at
+    )
+    VALUES (?, ?, ?)
+    ON CONFLICT(key) DO UPDATE SET
+      value = excluded.value,
+      updated_at = excluded.updated_at
+  `
+  ).run(key, value, now)
+}
+
+function getAppSetting(key: string): string {
+  const db = getDatabase()
+
+  const row = db
+    .prepare(
+      `
+      SELECT value
+      FROM app_settings
+      WHERE key = ?
+    `
+    )
+    .get(key) as { value: string } | undefined
+
+  return row?.value || ''
+}
+
 export const backupService = {
   async createBackup() {
     const db = getDatabase()
@@ -40,12 +75,27 @@ export const backupService = {
 
     await db.backup(backupPath)
 
+    const backupAt = dayjs().format('YYYY-MM-DD HH:mm:ss')
+
+    setAppSetting('last_backup_at', backupAt)
+    setAppSetting('last_backup_file_name', backupFileName)
+    setAppSetting('last_backup_path', backupPath)
+
     return {
       success: true,
       cancelled: false,
       fileName: backupFileName,
       backupPath,
+      backupAt,
       message: `Backup created successfully: ${backupFileName}`
+    }
+  },
+
+  getLastBackup() {
+    return {
+      backupAt: getAppSetting('last_backup_at'),
+      fileName: getAppSetting('last_backup_file_name'),
+      backupPath: getAppSetting('last_backup_path')
     }
   },
 

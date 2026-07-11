@@ -1,4 +1,4 @@
-import { useState } from 'react'
+ximport { useCallback, useEffect, useState } from 'react'
 import './App.css'
 import { appMenus } from './config/appMenus'
 import AccountGroupScreen from './modules/master/account-group/AccountGroupScreen'
@@ -9,6 +9,7 @@ import ItemDesignScreen from './modules/master/item-design/ItemDesignScreen'
 import ItemMasterScreen from './modules/master/item-master/ItemMasterScreen'
 import ItemOpeningStockScreen from './modules/master/item-opening-stock/ItemOpeningStockScreen'
 import FirmMasterScreen from './modules/master/firm-master/FirmMasterScreen'
+import CashFineOpeningScreen from './modules/master/cash-fine-opening/CashFineOpeningScreen'
 import SaleScreen from './modules/transaction/sale/SaleScreen'
 import PurchaseScreen from './modules/transaction/purchase/PurchaseScreen'
 import PurchaseRegisterScreen from './modules/transaction/purchase-register/PurchaseRegisterScreen'
@@ -30,12 +31,61 @@ const dashboardTab: WorkspaceTab = {
   module: 'home'
 }
 
+function formatTopBarDateTime(value: string): string {
+  if (!value) return '-'
+
+  const [datePart, timePart = ''] = value.split(' ')
+  const [year, month, day] = datePart.split('-')
+
+  if (!year || !month || !day) return value
+
+  const shortTime = timePart ? timePart.slice(0, 5) : ''
+
+  return `${day}/${month}/${year}${shortTime ? ` ${shortTime}` : ''}`
+}
+
 function App(): React.JSX.Element {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [tabs, setTabs] = useState<WorkspaceTab[]>([dashboardTab])
   const [activeTabId, setActiveTabId] = useState('dashboard')
+  const [topFirmName, setTopFirmName] = useState('Demo')
+  const [lastBackupLabel, setLastBackupLabel] = useState('-')
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? dashboardTab
+
+  const loadTopBarInfo = useCallback(async (): Promise<void> => {
+    try {
+      const [firm, lastBackup] = await Promise.all([
+        window.api.firm.get(),
+        window.api.backup.getLast()
+      ])
+
+      setTopFirmName(firm?.firmName || 'Demo')
+      setLastBackupLabel(formatTopBarDateTime(lastBackup?.backupAt || ''))
+    } catch {
+      setTopFirmName('Demo')
+      setLastBackupLabel('-')
+    }
+  }, [])
+
+  useEffect(() => {
+    const loadTimer = window.setTimeout(() => {
+      void loadTopBarInfo()
+    }, 0)
+
+    const handleTopBarRefresh = (): void => {
+      void loadTopBarInfo()
+    }
+
+    window.addEventListener('erp:backup-created', handleTopBarRefresh)
+    window.addEventListener('erp:firm-updated', handleTopBarRefresh)
+
+    return () => {
+      window.clearTimeout(loadTimer)
+      window.removeEventListener('erp:backup-created', handleTopBarRefresh)
+      window.removeEventListener('erp:firm-updated', handleTopBarRefresh)
+    }
+  }, [loadTopBarInfo])
 
   const openScreen = (screen: AppMenuChild): void => {
     setTabs((currentTabs) => {
@@ -128,12 +178,17 @@ function App(): React.JSX.Element {
 
         <div className="top-actions">
           <label htmlFor="firm-select">Firm</label>
-          <select id="firm-select" className="firm-select">
-            <option>Demo</option>
+          <select
+            id="firm-select"
+            className="firm-select"
+            value={topFirmName}
+            onChange={() => undefined}
+          >
+            <option value={topFirmName}>{topFirmName}</option>
           </select>
 
           <button className="last-backup" type="button">
-            Last Backup -
+            Last Backup {lastBackupLabel}
           </button>
           <button
             className="screen-btn"
@@ -171,6 +226,8 @@ function App(): React.JSX.Element {
           <ItemOpeningStockScreen onClose={() => closeTab(activeTab.id)} />
         ) : activeTab.id === 'firm-master' ? (
           <FirmMasterScreen onClose={() => closeTab(activeTab.id)} />
+        ) : activeTab.id === 'cash-fine-opening' ? (
+          <CashFineOpeningScreen onClose={() => closeTab(activeTab.id)} />
         ) : activeTab.id === 'sale' ? (
           <SaleScreen onClose={() => closeTab(activeTab.id)} />
         ) : activeTab.id === 'purchase' ? (

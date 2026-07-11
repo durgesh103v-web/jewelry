@@ -1,47 +1,46 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 import AppAlert from '../../../components/ui/AppAlert'
 import AppConfirmDialog from '../../../components/ui/AppConfirmDialog'
 import { getFriendlyErrorMessage } from '../../../utils/getFriendlyErrorMessage'
+import {
+  calculateFine,
+  calculateHishob,
+  calculateMajuri,
+  calculateNetWeight
+} from '../../../utils/jewelleryFormula'
 
 type AlertType = 'success' | 'error' | 'warning'
+type UnitType = 'Kg' | 'Gm' | 'Pcs'
+type MetalType = 'Gold' | 'Silver'
 
-type Item = {
+type ItemOption = {
   id: string
   itemName: string
   metalType: string
-  itemGroupId: string
-  groupName: string
   defaultStampId: string
-  stampName: string
   defaultDesignId: string
-  designName: string
-  barcodeItem: boolean
-  barcodeType: string
-  labourChargesBy: string
-  salePurchaseBy: string
-  gstHsnCode: string
-  fixedWeightPerPcs: number
+  defaultTanch: number
+  defaultWastage: number
+  defaultLabourRate: number
+  labourRateType: string
   active: boolean
 }
 
-type ItemStamp = {
+type StampOption = {
   id: string
   stampName: string
   metalType: string
-  description: string
   active: boolean
 }
 
-type ItemDesign = {
+type DesignOption = {
   id: string
   designName: string
   metalType: string
-  description: string
   active: boolean
 }
 
-type OpeningStock = {
+type OpeningStockRecord = {
   id: string
   stockDate: string
   itemId: string
@@ -61,35 +60,59 @@ type OpeningStock = {
   tanch: number
   wastage: number
   hishob: number
-  unit: string
+  unit: UnitType
+  majuriRate: number
   fine: number
+  majuri: number
   active: boolean
 }
 
+type DraftLine = {
+  lineNo: number
+  stockDate: string
+  metalType: MetalType
+  stampId: string
+  stampName: string
+  itemId: string
+  itemName: string
+  designId: string
+  designName: string
+  pcs: number
+  grossWeight: number
+  lessWeight: number
+  addWeight: number
+  netWeight: number
+  tanch: number
+  wastage: number
+  hishob: number
+  unit: UnitType
+  majuriRate: number
+  fine: number
+  majuri: number
+  barcode: string
+  remark: string
+  active: boolean
+}
+
+const today = new Date().toISOString().slice(0, 10)
+
 const initialForm = {
-  stockDate: getTodayDate(),
-  itemId: '',
+  stockDate: today,
+  metalType: 'Silver' as MetalType,
   stampId: '',
+  itemId: '',
   designId: '',
-  barcode: '',
-  remark: '',
   pcs: '',
   grossWeight: '',
   lessWeight: '',
   addWeight: '',
   tanch: '',
   wastage: '',
-  hishob: '',
-  unit: 'GM',
+  unit: 'Kg' as UnitType,
+  majuriRate: '',
+  barcode: '',
+  remark: '',
   active: true
-}
-
-function getTodayDate(): string {
-  const date = new Date()
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
 }
 
 function toNumber(value: string | number): number {
@@ -99,103 +122,140 @@ function toNumber(value: string | number): number {
   return Number.isFinite(numberValue) ? numberValue : 0
 }
 
-function roundNumber(value: number, decimals = 3): number {
-  const factor = Math.pow(10, decimals)
-  return Math.round((value + Number.EPSILON) * factor) / factor
-}
-
 function isValidAmountInput(value: string): boolean {
   return /^-?\d*\.?\d*$/.test(value)
 }
 
-function calculateNetWeight(grossWeight: string, lessWeight: string, addWeight: string): number {
-  return roundNumber(toNumber(grossWeight) - toNumber(lessWeight) + toNumber(addWeight))
+function formatNumber(value: number): string {
+  return Number(value || 0)
+    .toFixed(3)
+    .replace(/\.?0+$/, '')
 }
 
-function calculateFine(netWeight: number, tanch: string, wastage: string): number {
-  return roundNumber((netWeight * (toNumber(tanch) + toNumber(wastage))) / 100)
+function formatDate(value: string): string {
+  if (!value) return '-'
+
+  const [year, month, day] = value.split('-')
+  if (!year || !month || !day) return value
+
+  return `${day}/${month}/${year}`
+}
+
+function normalizeUnit(value: string): UnitType {
+  const normalized = String(value || 'Kg')
+    .trim()
+    .toUpperCase()
+
+  if (normalized === 'GM') return 'Gm'
+  if (normalized === 'PCS') return 'Pcs'
+
+  return 'Kg'
+}
+
+function normalizeMetal(value: string): MetalType {
+  return value === 'Gold' ? 'Gold' : 'Silver'
 }
 
 function ItemOpeningStockScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
   const [form, setForm] = useState(initialForm)
-  const [openingStocks, setOpeningStocks] = useState<OpeningStock[]>([])
-  const [items, setItems] = useState<Item[]>([])
-  const [itemStamps, setItemStamps] = useState<ItemStamp[]>([])
-  const [itemDesigns, setItemDesigns] = useState<ItemDesign[]>([])
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<OpeningStock | null>(null)
+  const [items, setItems] = useState<ItemOption[]>([])
+  const [stamps, setStamps] = useState<StampOption[]>([])
+  const [designs, setDesigns] = useState<DesignOption[]>([])
+  const [savedRecords, setSavedRecords] = useState<OpeningStockRecord[]>([])
+  const [draftLines, setDraftLines] = useState<DraftLine[]>([])
+  const [selectedDraftLineNo, setSelectedDraftLineNo] = useState<number | null>(null)
+  const [recordToDelete, setRecordToDelete] = useState<OpeningStockRecord | null>(null)
+  const [searchText, setSearchText] = useState('')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [searchText, setSearchText] = useState('')
   const [alertMessage, setAlertMessage] = useState('')
   const [alertType, setAlertType] = useState<AlertType>('success')
 
   const alertTimerRef = useRef<number | null>(null)
-  const stockDateInputRef = useRef<HTMLInputElement | null>(null)
   const itemSelectRef = useRef<HTMLSelectElement | null>(null)
-  const stampSelectRef = useRef<HTMLSelectElement | null>(null)
-  const designSelectRef = useRef<HTMLSelectElement | null>(null)
-  const barcodeInputRef = useRef<HTMLInputElement | null>(null)
-  const remarkInputRef = useRef<HTMLInputElement | null>(null)
-  const pcsInputRef = useRef<HTMLInputElement | null>(null)
-  const grossWeightInputRef = useRef<HTMLInputElement | null>(null)
-  const lessWeightInputRef = useRef<HTMLInputElement | null>(null)
-  const addWeightInputRef = useRef<HTMLInputElement | null>(null)
-  const tanchInputRef = useRef<HTMLInputElement | null>(null)
-  const wastageInputRef = useRef<HTMLInputElement | null>(null)
-  const hishobInputRef = useRef<HTMLInputElement | null>(null)
-  const unitSelectRef = useRef<HTMLSelectElement | null>(null)
-  const activeCheckboxRef = useRef<HTMLInputElement | null>(null)
 
-  const selectedItem = useMemo(() => {
-    return items.find((item) => item.id === form.itemId)
-  }, [items, form.itemId])
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => item.metalType === form.metalType && item.active)
+  }, [items, form.metalType])
 
-  const selectedMetalType = selectedItem?.metalType ?? ''
+  const filteredStamps = useMemo(() => {
+    return stamps.filter((stamp) => stamp.metalType === form.metalType && stamp.active)
+  }, [stamps, form.metalType])
 
-  const activeItems = useMemo(() => {
-    return items.filter((item) => item.active)
-  }, [items])
+  const filteredDesigns = useMemo(() => {
+    return designs.filter((design) => design.metalType === form.metalType && design.active)
+  }, [designs, form.metalType])
 
-  const activeStamps = useMemo(() => {
-    if (!selectedMetalType) return []
-    return itemStamps.filter((stamp) => stamp.active && stamp.metalType === selectedMetalType)
-  }, [itemStamps, selectedMetalType])
+  const preview = useMemo(() => {
+    const netWeight = calculateNetWeight(
+      toNumber(form.grossWeight),
+      toNumber(form.lessWeight),
+      toNumber(form.addWeight)
+    )
+    const hishob = calculateHishob(toNumber(form.tanch), toNumber(form.wastage))
+    const fine = calculateFine(netWeight, toNumber(form.tanch), toNumber(form.wastage))
+    const majuri = calculateMajuri({
+      netWeight,
+      pcs: toNumber(form.pcs),
+      labourRate: toNumber(form.majuriRate),
+      labourRateType: form.unit
+    })
 
-  const activeDesigns = useMemo(() => {
-    if (!selectedMetalType) return []
-    return itemDesigns.filter((design) => design.active && design.metalType === selectedMetalType)
-  }, [itemDesigns, selectedMetalType])
+    return {
+      netWeight,
+      hishob,
+      fine,
+      majuri
+    }
+  }, [form])
 
-  const netWeight = useMemo(() => {
-    return calculateNetWeight(form.grossWeight, form.lessWeight, form.addWeight)
-  }, [form.grossWeight, form.lessWeight, form.addWeight])
-
-  const fine = useMemo(() => {
-    return calculateFine(netWeight, form.tanch, form.wastage)
-  }, [netWeight, form.tanch, form.wastage])
-
-  const filteredOpeningStocks = useMemo(() => {
+  const filteredSavedRecords = useMemo(() => {
     const keyword = searchText.trim().toLowerCase()
 
-    if (!keyword) return openingStocks
-
-    return openingStocks.filter((stock) => {
+    return savedRecords.filter((record) => {
       return (
-        stock.itemName.toLowerCase().includes(keyword) ||
-        stock.metalType.toLowerCase().includes(keyword) ||
-        stock.stampName.toLowerCase().includes(keyword) ||
-        stock.designName.toLowerCase().includes(keyword) ||
-        stock.barcode.toLowerCase().includes(keyword) ||
-        stock.remark.toLowerCase().includes(keyword)
+        !keyword ||
+        record.itemName.toLowerCase().includes(keyword) ||
+        record.metalType.toLowerCase().includes(keyword) ||
+        record.stampName.toLowerCase().includes(keyword) ||
+        record.designName.toLowerCase().includes(keyword) ||
+        record.barcode.toLowerCase().includes(keyword)
       )
     })
-  }, [openingStocks, searchText])
+  }, [savedRecords, searchText])
 
-  const activeCount = useMemo(() => {
-    return openingStocks.filter((stock) => stock.active).length
-  }, [openingStocks])
+  const draftTotals = useMemo(() => {
+    return draftLines.reduce(
+      (total, line) => {
+        const bucket = line.metalType === 'Gold' ? total.gold : total.silver
+
+        bucket.pcs += Number(line.pcs || 0)
+        bucket.grossWeight += Number(line.grossWeight || 0)
+        bucket.netWeight += Number(line.netWeight || 0)
+        bucket.fine += Number(line.fine || 0)
+        bucket.majuri += Number(line.majuri || 0)
+
+        return total
+      },
+      {
+        gold: {
+          pcs: 0,
+          grossWeight: 0,
+          netWeight: 0,
+          fine: 0,
+          majuri: 0
+        },
+        silver: {
+          pcs: 0,
+          grossWeight: 0,
+          netWeight: 0,
+          fine: 0,
+          majuri: 0
+        }
+      }
+    )
+  }, [draftLines])
 
   const showAlert = useCallback((type: AlertType, message: string): void => {
     setAlertType(type)
@@ -210,209 +270,211 @@ function ItemOpeningStockScreen({ onClose }: { onClose: () => void }): React.JSX
     }, 3000)
   }, [])
 
-  const focusNextOnEnter = (
-    event: ReactKeyboardEvent<HTMLInputElement | HTMLSelectElement>,
-    nextElement?: HTMLElement | null
-  ): void => {
-    if (event.key !== 'Enter') return
-
-    event.preventDefault()
-    nextElement?.focus()
-  }
-
-  const handleDecimalChange = (
-    value: string,
-    fieldName: 'pcs' | 'grossWeight' | 'lessWeight' | 'addWeight' | 'tanch' | 'wastage' | 'hishob'
-  ): void => {
-    if (!isValidAmountInput(value)) return
-
-    setForm((current) => ({
-      ...current,
-      [fieldName]: value
-    }))
-  }
-
-  const loadOpeningStocks = useCallback(async (): Promise<void> => {
-    const data = await window.api.itemOpeningStock.list()
-    setOpeningStocks(data)
-  }, [])
-
-  const loadMasters = useCallback(async (): Promise<void> => {
-    const [itemsData, stampsData, designsData] = await Promise.all([
-      window.api.items.list(),
-      window.api.itemStamps.list(),
-      window.api.itemDesigns.list()
-    ])
-
-    setItems(itemsData)
-    setItemStamps(stampsData)
-    setItemDesigns(designsData)
-
-    const firstActiveItem = itemsData.find((item) => item.active)
-
-    if (firstActiveItem) {
-      setForm((current) => ({
-        ...current,
-        itemId: firstActiveItem.id,
-        stampId: firstActiveItem.defaultStampId,
-        designId: firstActiveItem.defaultDesignId
-      }))
-    }
-  }, [])
-
-  const loadInitialData = useCallback(async (): Promise<void> => {
+  const loadData = useCallback(async (): Promise<void> => {
     try {
       setLoading(true)
-      await loadMasters()
-      await loadOpeningStocks()
+
+      const [itemData, stampData, designData, openingData] = await Promise.all([
+        window.api.items.list(),
+        window.api.itemStamps.list(),
+        window.api.itemDesigns.list(),
+        window.api.itemOpeningStock.list()
+      ])
+
+      setItems(itemData)
+      setStamps(stampData)
+      setDesigns(designData)
+      setSavedRecords(openingData)
     } catch (error) {
       showAlert('error', getFriendlyErrorMessage(error))
     } finally {
       setLoading(false)
     }
-  }, [loadMasters, loadOpeningStocks, showAlert])
+  }, [showAlert])
 
-  const handleNew = useCallback((): void => {
-    const firstActiveItem = activeItems[0]
+  const updateForm = (field: keyof typeof initialForm, value: string | boolean): void => {
+    setForm((current) => ({
+      ...current,
+      [field]: value
+    }))
+  }
 
-    setEditingId(null)
-    setAlertMessage('')
-    setForm({
-      ...initialForm,
-      stockDate: getTodayDate(),
-      itemId: firstActiveItem?.id ?? '',
-      stampId: firstActiveItem?.defaultStampId ?? '',
-      designId: firstActiveItem?.defaultDesignId ?? ''
-    })
+  const updateAmountField = (
+    field: 'pcs' | 'grossWeight' | 'lessWeight' | 'addWeight' | 'tanch' | 'wastage' | 'majuriRate',
+    value: string
+  ): void => {
+    if (!isValidAmountInput(value)) return
+    updateForm(field, value)
+  }
 
-    window.setTimeout(() => {
-      stockDateInputRef.current?.focus()
-    }, 0)
-  }, [activeItems])
+  const handleMetalChange = (metalType: string): void => {
+    setForm((current) => ({
+      ...current,
+      metalType: normalizeMetal(metalType),
+      stampId: '',
+      itemId: '',
+      designId: '',
+      pcs: '',
+      grossWeight: '',
+      lessWeight: '',
+      addWeight: '',
+      tanch: '',
+      wastage: '',
+      majuriRate: '',
+      unit: 'Kg'
+    }))
+  }
 
   const handleItemChange = (itemId: string): void => {
-    const item = items.find((currentItem) => currentItem.id === itemId)
+    const item = items.find((entry) => entry.id === itemId)
 
     setForm((current) => ({
       ...current,
       itemId,
-      stampId: item?.defaultStampId ?? '',
-      designId: item?.defaultDesignId ?? ''
+      stampId: item?.defaultStampId || current.stampId || '',
+      designId: item?.defaultDesignId || current.designId || '',
+      lessWeight: '',
+      tanch: item?.defaultTanch ? String(item.defaultTanch) : current.tanch,
+      wastage: item?.defaultWastage ? String(item.defaultWastage) : current.wastage,
+      majuriRate: item?.defaultLabourRate ? String(item.defaultLabourRate) : current.majuriRate,
+      unit: normalizeUnit(item?.labourRateType || current.unit || 'Kg')
     }))
   }
 
-  const validateForm = useCallback((): boolean => {
-    if (!form.itemId) {
-      showAlert('warning', 'Please select item.')
+  const resetLineForm = useCallback((): void => {
+    setForm((current) => ({
+      ...initialForm,
+      stockDate: current.stockDate,
+      metalType: current.metalType
+    }))
+    setSelectedDraftLineNo(null)
+
+    window.setTimeout(() => {
       itemSelectRef.current?.focus()
-      return false
+    }, 0)
+  }, [])
+
+  const addDraftLine = (): void => {
+    if (!form.itemId) {
+      showAlert('warning', 'Please select item name.')
+      itemSelectRef.current?.focus()
+      return
     }
 
-    if (toNumber(form.grossWeight) <= 0 && toNumber(form.pcs) <= 0) {
-      showAlert('warning', 'Please enter gross weight or pcs.')
-      grossWeightInputRef.current?.focus()
-      return false
+    if (toNumber(form.grossWeight) <= 0) {
+      showAlert('warning', 'Please enter gross weight.')
+      return
     }
 
-    if (netWeight < 0) {
-      showAlert('warning', 'Net weight cannot be negative.')
-      grossWeightInputRef.current?.focus()
-      return false
+    const item = items.find((entry) => entry.id === form.itemId)
+    const stamp = stamps.find((entry) => entry.id === form.stampId)
+    const design = designs.find((entry) => entry.id === form.designId)
+
+    if (!item) {
+      showAlert('warning', 'Selected item not found.')
+      return
     }
 
-    return true
-  }, [form.grossWeight, form.itemId, form.pcs, netWeight, showAlert])
+    const line: DraftLine = {
+      lineNo: draftLines.length + 1,
+      stockDate: form.stockDate,
+      metalType: form.metalType,
+      stampId: form.stampId,
+      stampName: stamp?.stampName || '',
+      itemId: form.itemId,
+      itemName: item.itemName,
+      designId: form.designId,
+      designName: design?.designName || '',
+      pcs: toNumber(form.pcs),
+      grossWeight: toNumber(form.grossWeight),
+      lessWeight: toNumber(form.lessWeight),
+      addWeight: toNumber(form.addWeight),
+      netWeight: preview.netWeight,
+      tanch: toNumber(form.tanch),
+      wastage: toNumber(form.wastage),
+      hishob: preview.hishob,
+      unit: form.unit,
+      majuriRate: toNumber(form.majuriRate),
+      fine: preview.fine,
+      majuri: preview.majuri,
+      barcode: form.barcode.trim(),
+      remark: form.remark.trim(),
+      active: form.active
+    }
 
-  const handleSave = useCallback(async (): Promise<void> => {
-    if (saving || !validateForm()) return
+    setDraftLines((current) => [...current, line])
+    resetLineForm()
+  }
+
+  const removeSelectedDraftLine = (): void => {
+    if (!selectedDraftLineNo) {
+      showAlert('warning', 'Please select a line to remove.')
+      return
+    }
+
+    setDraftLines((current) =>
+      current
+        .filter((line) => line.lineNo !== selectedDraftLineNo)
+        .map((line, index) => ({
+          ...line,
+          lineNo: index + 1
+        }))
+    )
+    setSelectedDraftLineNo(null)
+  }
+
+  const saveOpeningStock = async (): Promise<void> => {
+    if (draftLines.length === 0) {
+      showAlert('warning', 'Please add at least one opening stock line.')
+      return
+    }
 
     try {
       setSaving(true)
 
-      const payload = {
-        stockDate: form.stockDate || getTodayDate(),
-        itemId: form.itemId,
-        stampId: form.stampId,
-        designId: form.designId,
-        barcode: form.barcode.trim(),
-        remark: form.remark.trim(),
-        pcs: toNumber(form.pcs),
-        grossWeight: toNumber(form.grossWeight),
-        lessWeight: toNumber(form.lessWeight),
-        addWeight: toNumber(form.addWeight),
-        tanch: toNumber(form.tanch),
-        wastage: toNumber(form.wastage),
-        hishob: toNumber(form.hishob),
-        unit: form.unit,
-        active: form.active
+      for (const line of draftLines) {
+        await window.api.itemOpeningStock.create({
+          stockDate: line.stockDate,
+          itemId: line.itemId,
+          stampId: line.stampId,
+          designId: line.designId,
+          barcode: line.barcode,
+          remark: line.remark,
+          pcs: line.pcs,
+          grossWeight: line.grossWeight,
+          lessWeight: line.lessWeight,
+          addWeight: line.addWeight,
+          tanch: line.tanch,
+          wastage: line.wastage,
+          hishob: line.hishob,
+          unit: line.unit,
+          majuriRate: line.majuriRate,
+          active: line.active
+        })
       }
 
-      const successMessage = editingId
-        ? 'Opening stock updated successfully.'
-        : 'Opening stock saved successfully.'
-
-      if (editingId) {
-        await window.api.itemOpeningStock.update(editingId, payload)
-      } else {
-        await window.api.itemOpeningStock.create(payload)
-      }
-
-      await loadOpeningStocks()
-      handleNew()
-      showAlert('success', successMessage)
+      showAlert('success', 'Item opening stock saved successfully.')
+      setDraftLines([])
+      setSelectedDraftLineNo(null)
+      await loadData()
     } catch (error) {
       showAlert('error', getFriendlyErrorMessage(error))
     } finally {
       setSaving(false)
     }
-  }, [editingId, form, handleNew, loadOpeningStocks, saving, showAlert, validateForm])
-
-  const handleEdit = (stock: OpeningStock): void => {
-    setEditingId(stock.id)
-    setAlertMessage('')
-
-    setForm({
-      stockDate: stock.stockDate,
-      itemId: stock.itemId,
-      stampId: stock.stampId,
-      designId: stock.designId,
-      barcode: stock.barcode,
-      remark: stock.remark,
-      pcs: stock.pcs === 0 ? '' : String(stock.pcs),
-      grossWeight: stock.grossWeight === 0 ? '' : String(stock.grossWeight),
-      lessWeight: stock.lessWeight === 0 ? '' : String(stock.lessWeight),
-      addWeight: stock.addWeight === 0 ? '' : String(stock.addWeight),
-      tanch: stock.tanch === 0 ? '' : String(stock.tanch),
-      wastage: stock.wastage === 0 ? '' : String(stock.wastage),
-      hishob: stock.hishob === 0 ? '' : String(stock.hishob),
-      unit: stock.unit || 'GM',
-      active: stock.active
-    })
-
-    window.setTimeout(() => {
-      stockDateInputRef.current?.focus()
-    }, 0)
   }
 
-  const requestDelete = (stock: OpeningStock): void => {
-    setDeleteTarget(stock)
-  }
-
-  const handleConfirmDelete = async (): Promise<void> => {
-    if (!deleteTarget) return
+  const deleteSavedRecord = async (): Promise<void> => {
+    if (!recordToDelete) return
 
     try {
       setDeleting(true)
 
-      await window.api.itemOpeningStock.remove(deleteTarget.id)
+      await window.api.itemOpeningStock.remove(recordToDelete.id)
 
-      if (editingId === deleteTarget.id) {
-        handleNew()
-      }
-
-      setDeleteTarget(null)
-      await loadOpeningStocks()
       showAlert('success', 'Opening stock deleted successfully.')
+      setRecordToDelete(null)
+      await loadData()
     } catch (error) {
       showAlert('error', getFriendlyErrorMessage(error))
     } finally {
@@ -420,60 +482,23 @@ function ItemOpeningStockScreen({ onClose }: { onClose: () => void }): React.JSX
     }
   }
 
-  const handleCancelDelete = useCallback((): void => {
-    if (deleting) return
-    setDeleteTarget(null)
-  }, [deleting])
-
   useEffect(() => {
-    const loadTimer = window.setTimeout(() => {
-      void loadInitialData()
-      stockDateInputRef.current?.focus()
+    const timer = window.setTimeout(() => {
+      void loadData()
     }, 0)
 
     return () => {
-      window.clearTimeout(loadTimer)
+      window.clearTimeout(timer)
 
       if (alertTimerRef.current) {
         window.clearTimeout(alertTimerRef.current)
       }
     }
-  }, [loadInitialData])
-
-  useEffect(() => {
-    const handleKeyboard = (event: KeyboardEvent): void => {
-      if (event.ctrlKey && event.key.toLowerCase() === 'n') {
-        event.preventDefault()
-        handleNew()
-      }
-
-      if (event.ctrlKey && event.key.toLowerCase() === 's') {
-        event.preventDefault()
-        void handleSave()
-      }
-
-      if (event.key === 'Escape') {
-        if (deleteTarget) {
-          handleCancelDelete()
-          return
-        }
-
-        if (editingId) {
-          handleNew()
-        }
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyboard)
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyboard)
-    }
-  }, [deleteTarget, editingId, handleCancelDelete, handleNew, handleSave])
+  }, [loadData])
 
   return (
     <div className="item-opening-stock-screen">
-      <div className="item-opening-stock-window">
+      <div className="item-opening-stock-window item-opening-stock-client-window">
         <div className="form-title-bar">
           <span>Item Opening Stock</span>
 
@@ -482,69 +507,30 @@ function ItemOpeningStockScreen({ onClose }: { onClose: () => void }): React.JSX
           </button>
         </div>
 
-        <div className="item-opening-stock-body">
+        <div className="item-opening-stock-body item-opening-stock-client-body">
           <AppAlert type={alertType} message={alertMessage} onClose={() => setAlertMessage('')} />
 
-          <div className="opening-stock-form-panel">
-            <div className="section-title">Stock Details</div>
-
-            <div className="opening-stock-grid">
+          <div className="opening-entry-panel">
+            <div className="opening-entry-grid first-row">
               <div className="form-field">
-                <label htmlFor="opening-stock-date">Date</label>
-                <input
-                  id="opening-stock-date"
-                  ref={stockDateInputRef}
-                  type="date"
-                  value={form.stockDate}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      stockDate: event.target.value
-                    }))
-                  }
-                  onKeyDown={(event) => focusNextOnEnter(event, itemSelectRef.current)}
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="opening-stock-item">Item Name</label>
+                <label>Gold / Silver</label>
                 <select
-                  id="opening-stock-item"
-                  ref={itemSelectRef}
-                  value={form.itemId}
-                  onChange={(event) => handleItemChange(event.target.value)}
-                  onKeyDown={(event) => focusNextOnEnter(event, stampSelectRef.current)}
+                  value={form.metalType}
+                  onChange={(event) => handleMetalChange(event.target.value)}
                 >
-                  <option value="">Select Item</option>
-                  {activeItems.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.itemName} - {item.metalType}
-                    </option>
-                  ))}
+                  <option value="Gold">GOLD</option>
+                  <option value="Silver">SILVER</option>
                 </select>
               </div>
 
               <div className="form-field">
-                <label htmlFor="opening-stock-metal">Metal</label>
-                <input id="opening-stock-metal" value={selectedMetalType || '-'} disabled />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="opening-stock-stamp">Stamp</label>
+                <label>Stamp</label>
                 <select
-                  id="opening-stock-stamp"
-                  ref={stampSelectRef}
                   value={form.stampId}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      stampId: event.target.value
-                    }))
-                  }
-                  onKeyDown={(event) => focusNextOnEnter(event, designSelectRef.current)}
+                  onChange={(event) => updateForm('stampId', event.target.value)}
                 >
                   <option value="">Select Stamp</option>
-                  {activeStamps.map((stamp) => (
+                  {filteredStamps.map((stamp) => (
                     <option key={stamp.id} value={stamp.id}>
                       {stamp.stampName}
                     </option>
@@ -552,353 +538,223 @@ function ItemOpeningStockScreen({ onClose }: { onClose: () => void }): React.JSX
                 </select>
               </div>
 
-              <div className="form-field">
-                <label htmlFor="opening-stock-design">Design</label>
+              <div className="form-field item-name-wide">
+                <label>Item Name</label>
                 <select
-                  id="opening-stock-design"
-                  ref={designSelectRef}
+                  ref={itemSelectRef}
+                  value={form.itemId}
+                  onChange={(event) => handleItemChange(event.target.value)}
+                >
+                  <option value="">Select Item</option>
+                  {filteredItems.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.itemName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-field item-design-wide">
+                <label>Item Design</label>
+                <select
                   value={form.designId}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      designId: event.target.value
-                    }))
-                  }
-                  onKeyDown={(event) => focusNextOnEnter(event, barcodeInputRef.current)}
+                  onChange={(event) => updateForm('designId', event.target.value)}
                 >
                   <option value="">Select Design</option>
-                  {activeDesigns.map((design) => (
+                  {filteredDesigns.map((design) => (
                     <option key={design.id} value={design.id}>
                       {design.designName}
                     </option>
                   ))}
                 </select>
               </div>
+            </div>
 
+            <div className="opening-entry-grid second-row">
               <div className="form-field">
-                <label htmlFor="opening-stock-barcode">Barcode</label>
+                <label>Pcs</label>
                 <input
-                  id="opening-stock-barcode"
-                  ref={barcodeInputRef}
-                  value={form.barcode}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      barcode: event.target.value
-                    }))
-                  }
-                  onKeyDown={(event) => focusNextOnEnter(event, remarkInputRef.current)}
-                  placeholder="Optional"
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="opening-stock-remark">Remark</label>
-                <input
-                  id="opening-stock-remark"
-                  ref={remarkInputRef}
-                  value={form.remark}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      remark: event.target.value
-                    }))
-                  }
-                  onKeyDown={(event) => focusNextOnEnter(event, pcsInputRef.current)}
-                  placeholder="Optional"
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="opening-stock-pcs">Pcs</label>
-                <input
-                  id="opening-stock-pcs"
-                  ref={pcsInputRef}
-                  type="text"
-                  inputMode="decimal"
                   value={form.pcs}
-                  onChange={(event) => handleDecimalChange(event.target.value, 'pcs')}
-                  onKeyDown={(event) => focusNextOnEnter(event, grossWeightInputRef.current)}
+                  onChange={(event) => updateAmountField('pcs', event.target.value)}
                   placeholder="0"
                 />
               </div>
 
               <div className="form-field">
-                <label htmlFor="opening-stock-gross-weight">Gr. Wt.</label>
+                <label>Gr. Wt.</label>
                 <input
-                  id="opening-stock-gross-weight"
-                  ref={grossWeightInputRef}
-                  type="text"
-                  inputMode="decimal"
                   value={form.grossWeight}
-                  onChange={(event) => handleDecimalChange(event.target.value, 'grossWeight')}
-                  onKeyDown={(event) => focusNextOnEnter(event, lessWeightInputRef.current)}
+                  onChange={(event) => updateAmountField('grossWeight', event.target.value)}
                   placeholder="0"
                 />
               </div>
 
               <div className="form-field">
-                <label htmlFor="opening-stock-less-weight">Less Wt.</label>
+                <label>Less Wt.</label>
                 <input
-                  id="opening-stock-less-weight"
-                  ref={lessWeightInputRef}
-                  type="text"
-                  inputMode="decimal"
                   value={form.lessWeight}
-                  onChange={(event) => handleDecimalChange(event.target.value, 'lessWeight')}
-                  onKeyDown={(event) => focusNextOnEnter(event, addWeightInputRef.current)}
+                  onChange={(event) => updateAmountField('lessWeight', event.target.value)}
                   placeholder="0"
                 />
               </div>
 
               <div className="form-field">
-                <label htmlFor="opening-stock-add-weight">Add Wt.</label>
-                <input
-                  id="opening-stock-add-weight"
-                  ref={addWeightInputRef}
-                  type="text"
-                  inputMode="decimal"
-                  value={form.addWeight}
-                  onChange={(event) => handleDecimalChange(event.target.value, 'addWeight')}
-                  onKeyDown={(event) => focusNextOnEnter(event, tanchInputRef.current)}
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="form-field readonly-field">
-                <label htmlFor="opening-stock-net-weight">Net Wt.</label>
-                <input id="opening-stock-net-weight" value={netWeight} disabled />
+                <label>Net Wt.</label>
+                <input value={formatNumber(preview.netWeight)} readOnly />
               </div>
 
               <div className="form-field">
-                <label htmlFor="opening-stock-tanch">Tanch</label>
+                <label>Tanch</label>
                 <input
-                  id="opening-stock-tanch"
-                  ref={tanchInputRef}
-                  type="text"
-                  inputMode="decimal"
                   value={form.tanch}
-                  onChange={(event) => handleDecimalChange(event.target.value, 'tanch')}
-                  onKeyDown={(event) => focusNextOnEnter(event, wastageInputRef.current)}
+                  onChange={(event) => updateAmountField('tanch', event.target.value)}
                   placeholder="0"
                 />
               </div>
 
               <div className="form-field">
-                <label htmlFor="opening-stock-wastage">Wastage</label>
+                <label>Wstg</label>
                 <input
-                  id="opening-stock-wastage"
-                  ref={wastageInputRef}
-                  type="text"
-                  inputMode="decimal"
                   value={form.wastage}
-                  onChange={(event) => handleDecimalChange(event.target.value, 'wastage')}
-                  onKeyDown={(event) => focusNextOnEnter(event, hishobInputRef.current)}
+                  onChange={(event) => updateAmountField('wastage', event.target.value)}
                   placeholder="0"
                 />
               </div>
 
               <div className="form-field">
-                <label htmlFor="opening-stock-hishob">Hishob</label>
-                <input
-                  id="opening-stock-hishob"
-                  ref={hishobInputRef}
-                  type="text"
-                  inputMode="decimal"
-                  value={form.hishob}
-                  onChange={(event) => handleDecimalChange(event.target.value, 'hishob')}
-                  onKeyDown={(event) => focusNextOnEnter(event, unitSelectRef.current)}
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="form-field">
-                <label htmlFor="opening-stock-unit">Unit</label>
+                <label>Unit</label>
                 <select
-                  id="opening-stock-unit"
-                  ref={unitSelectRef}
                   value={form.unit}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      unit: event.target.value
-                    }))
-                  }
-                  onKeyDown={(event) => focusNextOnEnter(event, activeCheckboxRef.current)}
+                  onChange={(event) => updateForm('unit', normalizeUnit(event.target.value))}
                 >
-                  <option>GM</option>
-                  <option>KG</option>
-                  <option>PCS</option>
+                  <option value="Kg">Kg</option>
+                  <option value="Gm">Gm</option>
+                  <option value="Pcs">Pcs</option>
                 </select>
               </div>
 
-              <div className="form-field readonly-field">
-                <label htmlFor="opening-stock-fine">Fine</label>
-                <input id="opening-stock-fine" value={fine} disabled />
-              </div>
-
-              <div className="form-field active-field">
-                <label htmlFor="opening-stock-active">Active</label>
+              <div className="form-field">
+                <label>Majuri Rate</label>
                 <input
-                  id="opening-stock-active"
-                  ref={activeCheckboxRef}
-                  type="checkbox"
-                  checked={form.active}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      active: event.target.checked
-                    }))
-                  }
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault()
-                      void handleSave()
-                    }
-                  }}
+                  value={form.majuriRate}
+                  onChange={(event) => updateAmountField('majuriRate', event.target.value)}
+                  placeholder="0"
                 />
               </div>
-            </div>
 
-            <div className="button-row opening-stock-button-row">
-              <button className="btn-new" type="button" onClick={handleNew} disabled={saving}>
-                New
+              <div className="form-field">
+                <label>Fine</label>
+                <input value={formatNumber(preview.fine)} readOnly />
+              </div>
+
+              <div className="form-field">
+                <label>Majuri</label>
+                <input value={formatNumber(preview.majuri)} readOnly />
+              </div>
+
+              <button className="opening-add-btn" type="button" onClick={addDraftLine}>
+                Add
               </button>
 
               <button
-                className="btn-save"
+                className="opening-remove-btn"
                 type="button"
-                onClick={() => void handleSave()}
-                disabled={saving}
+                onClick={removeSelectedDraftLine}
               >
-                {saving ? 'Saving...' : editingId ? 'Update' : 'Save'}
+                Remove
               </button>
+            </div>
 
-              {editingId && (
-                <button
-                  className="btn-cancel-edit"
-                  type="button"
-                  onClick={handleNew}
-                  disabled={saving}
-                >
-                  Cancel Edit
-                </button>
-              )}
+            <div className="opening-extra-grid">
+              <div className="form-field">
+                <label>Date</label>
+                <input
+                  type="date"
+                  value={form.stockDate}
+                  onChange={(event) => updateForm('stockDate', event.target.value)}
+                />
+              </div>
+
+              <div className="form-field">
+                <label>Barcode</label>
+                <input
+                  value={form.barcode}
+                  onChange={(event) => updateForm('barcode', event.target.value)}
+                  placeholder="Optional"
+                />
+              </div>
+
+              <div className="form-field opening-remark-field">
+                <label>Remark</label>
+                <input
+                  value={form.remark}
+                  onChange={(event) => updateForm('remark', event.target.value)}
+                  placeholder="Optional"
+                />
+              </div>
+
+              <div className="form-field active-field">
+                <label>Active</label>
+                <input
+                  type="checkbox"
+                  checked={form.active}
+                  onChange={(event) => updateForm('active', event.target.checked)}
+                />
+              </div>
             </div>
           </div>
 
-          <div className="list-toolbar">
-            <div className="list-search">
-              <label htmlFor="opening-stock-search">Search</label>
-
-              <input
-                id="opening-stock-search"
-                value={searchText}
-                onChange={(event) => setSearchText(event.target.value)}
-                placeholder="Search item, metal, stamp, design, barcode"
-              />
-
-              {searchText && (
-                <button
-                  className="search-clear-btn"
-                  type="button"
-                  onClick={() => setSearchText('')}
-                >
-                  &times;
-                </button>
-              )}
-            </div>
-
-            <div className="record-summary">
-              Total: <strong>{openingStocks.length}</strong> | Active:{' '}
-              <strong>{activeCount}</strong> | Showing:{' '}
-              <strong>{filteredOpeningStocks.length}</strong>
-            </div>
-          </div>
-
-          <div className="table-panel opening-stock-table-panel">
+          <div className="table-panel opening-draft-table-panel">
             <table>
               <thead>
                 <tr>
-                  <th>Sr</th>
-                  <th>Date</th>
-                  <th>Item</th>
-                  <th>Metal</th>
+                  <th>No</th>
+                  <th>G/S</th>
                   <th>Stamp</th>
-                  <th>Design</th>
+                  <th>Item</th>
+                  <th>Item Design</th>
                   <th>Pcs</th>
                   <th>Gr. Wt.</th>
-                  <th>Less</th>
-                  <th>Add</th>
-                  <th>Net</th>
+                  <th>Less Wt.</th>
+                  <th>Net Wt.</th>
                   <th>Tanch</th>
                   <th>Wstg</th>
-                  <th>Fine</th>
                   <th>Unit</th>
-                  <th>Active</th>
-                  <th>Action</th>
+                  <th>M. Rate</th>
+                  <th>Fine</th>
+                  <th>Majuri</th>
                 </tr>
               </thead>
 
               <tbody>
-                {loading ? (
+                {draftLines.length === 0 ? (
                   <tr>
-                    <td colSpan={17} className="empty-row">
-                      Loading opening stock...
-                    </td>
-                  </tr>
-                ) : filteredOpeningStocks.length === 0 ? (
-                  <tr>
-                    <td colSpan={17} className="empty-row">
-                      {searchText
-                        ? 'No matching opening stock found.'
-                        : 'No opening stock added yet.'}
+                    <td colSpan={15} className="empty-row">
+                      No opening stock line added yet.
                     </td>
                   </tr>
                 ) : (
-                  filteredOpeningStocks.map((stock, index) => (
+                  draftLines.map((line) => (
                     <tr
-                      key={stock.id}
-                      className={editingId === stock.id ? 'selected-row' : ''}
-                      onDoubleClick={() => handleEdit(stock)}
+                      key={line.lineNo}
+                      className={selectedDraftLineNo === line.lineNo ? 'selected-row' : ''}
+                      onClick={() => setSelectedDraftLineNo(line.lineNo)}
                     >
-                      <td>{index + 1}</td>
-                      <td>{stock.stockDate}</td>
-                      <td>{stock.itemName}</td>
-                      <td>{stock.metalType}</td>
-                      <td>{stock.stampName || '-'}</td>
-                      <td>{stock.designName || '-'}</td>
-                      <td>{stock.pcs}</td>
-                      <td>{stock.grossWeight}</td>
-                      <td>{stock.lessWeight}</td>
-                      <td>{stock.addWeight}</td>
-                      <td>{stock.netWeight}</td>
-                      <td>{stock.tanch}</td>
-                      <td>{stock.wastage}</td>
-                      <td>{stock.fine}</td>
-                      <td>{stock.unit}</td>
-                      <td>
-                        <span className={stock.active ? 'status-active' : 'status-inactive'}>
-                          {stock.active ? 'Yes' : 'No'}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="table-edit"
-                          type="button"
-                          onClick={() => handleEdit(stock)}
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          className="table-delete"
-                          type="button"
-                          onClick={() => requestDelete(stock)}
-                        >
-                          Delete
-                        </button>
-                      </td>
+                      <td>{line.lineNo}</td>
+                      <td>{line.metalType.toUpperCase()}</td>
+                      <td>{line.stampName || '-'}</td>
+                      <td>{line.itemName}</td>
+                      <td>{line.designName || '-'}</td>
+                      <td>{formatNumber(line.pcs)}</td>
+                      <td>{formatNumber(line.grossWeight)}</td>
+                      <td>{formatNumber(line.lessWeight)}</td>
+                      <td>{formatNumber(line.netWeight)}</td>
+                      <td>{formatNumber(line.tanch)}</td>
+                      <td>{formatNumber(line.wastage)}</td>
+                      <td>{line.unit}</td>
+                      <td>{formatNumber(line.majuriRate)}</td>
+                      <td>{formatNumber(line.fine)}</td>
+                      <td>{formatNumber(line.majuri)}</td>
                     </tr>
                   ))
                 )}
@@ -906,27 +762,180 @@ function ItemOpeningStockScreen({ onClose }: { onClose: () => void }): React.JSX
             </table>
           </div>
 
+          <div className="opening-summary-row">
+            <div className="opening-summary-card">
+              <h4>Gold</h4>
+              <span>Pcs : {formatNumber(draftTotals.gold.pcs)}</span>
+              <span>Gr : {formatNumber(draftTotals.gold.grossWeight)}</span>
+              <span>Net : {formatNumber(draftTotals.gold.netWeight)}</span>
+              <span>
+                F : <strong>{formatNumber(draftTotals.gold.fine)}</strong>
+              </span>
+              <span>
+                M : <strong>{formatNumber(draftTotals.gold.majuri)}</strong>
+              </span>
+            </div>
+
+            <div className="opening-summary-card">
+              <h4>Silver</h4>
+              <span>Pcs : {formatNumber(draftTotals.silver.pcs)}</span>
+              <span>Gr : {formatNumber(draftTotals.silver.grossWeight)}</span>
+              <span>Net : {formatNumber(draftTotals.silver.netWeight)}</span>
+              <span>
+                F : <strong>{formatNumber(draftTotals.silver.fine)}</strong>
+              </span>
+              <span>
+                M : <strong>{formatNumber(draftTotals.silver.majuri)}</strong>
+              </span>
+            </div>
+          </div>
+
+          <div className="opening-save-row">
+            <button
+              className="btn-save"
+              type="button"
+              onClick={() => void saveOpeningStock()}
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </button>
+
+            <button
+              className="btn-cancel-edit"
+              type="button"
+              onClick={() => {
+                setDraftLines([])
+                resetLineForm()
+              }}
+              disabled={saving}
+            >
+              Cancel
+            </button>
+          </div>
+
+          <div className="opening-saved-panel">
+            <div className="opening-saved-toolbar">
+              <div className="list-search">
+                <label>Saved Opening Stock</label>
+                <input
+                  value={searchText}
+                  onChange={(event) => setSearchText(event.target.value)}
+                  placeholder="Search item, metal, stamp, design, barcode"
+                />
+
+                {searchText && (
+                  <button
+                    className="search-clear-btn"
+                    type="button"
+                    onClick={() => setSearchText('')}
+                  >
+                    &times;
+                  </button>
+                )}
+              </div>
+
+              <div className="record-summary">
+                Total: <strong>{savedRecords.length}</strong> | Showing:{' '}
+                <strong>{filteredSavedRecords.length}</strong>
+              </div>
+            </div>
+
+            <div className="table-panel opening-saved-table-panel">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Sr</th>
+                    <th>Date</th>
+                    <th>Item</th>
+                    <th>Metal</th>
+                    <th>Stamp</th>
+                    <th>Design</th>
+                    <th>Pcs</th>
+                    <th>Gr. Wt.</th>
+                    <th>Less</th>
+                    <th>Net</th>
+                    <th>Tanch</th>
+                    <th>Wstg</th>
+                    <th>Fine</th>
+                    <th>M. Rate</th>
+                    <th>Majuri</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={16} className="empty-row">
+                        Loading opening stock...
+                      </td>
+                    </tr>
+                  ) : filteredSavedRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={16} className="empty-row">
+                        No saved opening stock found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredSavedRecords.map((record, index) => (
+                      <tr key={record.id}>
+                        <td>{index + 1}</td>
+                        <td>{formatDate(record.stockDate)}</td>
+                        <td>{record.itemName}</td>
+                        <td>{record.metalType}</td>
+                        <td>{record.stampName || '-'}</td>
+                        <td>{record.designName || '-'}</td>
+                        <td>{formatNumber(record.pcs)}</td>
+                        <td>{formatNumber(record.grossWeight)}</td>
+                        <td>{formatNumber(record.lessWeight)}</td>
+                        <td>{formatNumber(record.netWeight)}</td>
+                        <td>{formatNumber(record.tanch)}</td>
+                        <td>{formatNumber(record.wastage)}</td>
+                        <td>{formatNumber(record.fine)}</td>
+                        <td>{formatNumber(record.majuriRate)}</td>
+                        <td>{formatNumber(record.majuri)}</td>
+                        <td>
+                          <button
+                            className="btn-delete-small"
+                            type="button"
+                            onClick={() => setRecordToDelete(record)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <div className="screen-help-text">
             Formula: Net Weight = Gross Weight - Less Weight + Add Weight. Fine = Net Weight x
-            (Tanch + Wastage) / 100.
+            (Tanch + Wastage) / 100. Majuri depends on Kg/Gm/Pcs unit.
           </div>
         </div>
       </div>
 
       <AppConfirmDialog
-        open={Boolean(deleteTarget)}
+        open={Boolean(recordToDelete)}
         title="Delete Opening Stock?"
         message={
-          deleteTarget
-            ? `Are you sure you want to delete opening stock for "${deleteTarget.itemName}"? This action cannot be undone.`
+          recordToDelete
+            ? `Opening stock for "${recordToDelete.itemName}" will be removed from stock ledger.`
             : ''
         }
         confirmText="Delete"
         cancelText="Cancel"
         type="danger"
         loading={deleting}
-        onConfirm={() => void handleConfirmDelete()}
-        onCancel={handleCancelDelete}
+        onConfirm={() => void deleteSavedRecord()}
+        onCancel={() => {
+          if (!deleting) {
+            setRecordToDelete(null)
+          }
+        }}
       />
     </div>
   )

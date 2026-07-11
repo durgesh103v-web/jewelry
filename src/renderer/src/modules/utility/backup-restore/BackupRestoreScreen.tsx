@@ -38,6 +38,7 @@ function BackupRestoreScreen({ onClose }: { onClose: () => void }): React.JSX.El
       }
 
       showAlert('success', result.message || 'Backup created successfully.')
+      window.dispatchEvent(new CustomEvent('erp:backup-created'))
     } catch (error) {
       showAlert('error', getFriendlyErrorMessage(error))
     } finally {

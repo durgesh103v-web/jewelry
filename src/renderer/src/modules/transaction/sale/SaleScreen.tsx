@@ -46,6 +46,7 @@ type Balance = {
 
 type SaleItemLine = {
   id: string
+  metalType: MetalType
   lineType: string
   itemId: string
   itemName: string
@@ -249,6 +250,22 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
 
   const itemMajuriTotal = useMemo(() => {
     return itemLines.reduce((total, line) => total + line.majuri, 0)
+  }, [itemLines])
+
+  const itemSummaryTotals = useMemo(() => {
+    return itemLines.reduce(
+      (total, line) => {
+        total.pcs += Number(line.pcs || 0)
+        total.grossWeight += Number(line.grossWeight || 0)
+        total.netWeight += Number(line.netWeight || 0)
+        return total
+      },
+      {
+        pcs: 0,
+        grossWeight: 0,
+        netWeight: 0
+      }
+    )
   }, [itemLines])
 
   const paymentFineJamaTotal = useMemo(() => {
@@ -475,6 +492,7 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
     const newLine: SaleItemLine = {
       id: crypto.randomUUID(),
       lineType: 'NAVE',
+      metalType: header.metalType,
       itemId: selectedItem.id,
       itemName: selectedItem.itemName,
       stampId: itemForm.stampId,
@@ -773,7 +791,23 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
 
                 <div className="sale-item-entry-grid">
                   <div className="form-field">
-                    <label>Item</label>
+                    <label>Gold / Silver</label>
+                    <select
+                      value={header.metalType}
+                      onChange={(event) => handleMetalChange(event.target.value as MetalType)}
+                    >
+                      <option value="Gold">GOLD</option>
+                      <option value="Silver">SILVER</option>
+                    </select>
+                  </div>
+
+                  <div className="form-field">
+                    <label>Stamp</label>
+                    <input value={itemForm.stampName || '-'} disabled />
+                  </div>
+
+                  <div className="form-field sale-item-wide">
+                    <label>Item Name</label>
                     <select
                       ref={itemSelectRef}
                       value={itemForm.itemId}
@@ -787,6 +821,11 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
                         </option>
                       ))}
                     </select>
+                  </div>
+
+                  <div className="form-field">
+                    <label>Item Design</label>
+                    <input value={itemForm.designName || '-'} disabled />
                   </div>
 
                   <div className="form-field">
@@ -871,7 +910,7 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
                   </div>
 
                   <div className="form-field">
-                    <label>Lab Rate</label>
+                    <label>Majuri Rate</label>
                     <input
                       ref={labourRateInputRef}
                       value={itemForm.labourRate}
@@ -883,7 +922,7 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
                   </div>
 
                   <div className="form-field">
-                    <label>Lab Type</label>
+                    <label>Unit</label>
                     <select
                       value={itemForm.labourRateType}
                       onChange={(event) =>
@@ -893,9 +932,9 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
                         }))
                       }
                     >
-                      <option>Kg</option>
-                      <option>Gm</option>
-                      <option>Pcs</option>
+                      <option value="Kg">Kg</option>
+                      <option value="Gm">Gm</option>
+                      <option value="Pcs">Pcs</option>
                     </select>
                   </div>
 
@@ -926,18 +965,20 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
                   <thead>
                     <tr>
                       <th>Sr</th>
+                      <th>G/S</th>
+                      <th>Stamp</th>
                       <th>Item</th>
+                      <th>Item Design</th>
                       <th>Pcs</th>
                       <th>Gr. Wt.</th>
-                      <th>Pack</th>
-                      <th>Less</th>
-                      <th>Net</th>
+                      <th>Pack Wt.</th>
+                      <th>Less Wt.</th>
+                      <th>Net Wt.</th>
                       <th>Tunch</th>
                       <th>Wstg</th>
-                      <th>Hishob</th>
+                      <th>Unit</th>
+                      <th>M. Rate</th>
                       <th>Fine</th>
-                      <th>Lab Rate</th>
-                      <th>Lab Type</th>
                       <th>Majuri</th>
                       <th>Action</th>
                     </tr>
@@ -946,13 +987,13 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={15} className="empty-row">
+                        <td colSpan={17} className="empty-row">
                           Loading sale...
                         </td>
                       </tr>
                     ) : itemLines.length === 0 ? (
                       <tr>
-                        <td colSpan={15} className="empty-row">
+                        <td colSpan={17} className="empty-row">
                           No sale item added yet.
                         </td>
                       </tr>
@@ -960,7 +1001,10 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
                       itemLines.map((line, index) => (
                         <tr key={line.id}>
                           <td>{index + 1}</td>
+                          <td>{line.metalType}</td>
+                          <td>{line.stampName || '-'}</td>
                           <td>{line.itemName}</td>
+                          <td>{line.designName || '-'}</td>
                           <td>{formatNumber(line.pcs)}</td>
                           <td>{formatNumber(line.grossWeight)}</td>
                           <td>{formatNumber(line.packWeight)}</td>
@@ -968,17 +1012,17 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
                           <td>{formatNumber(line.netWeight)}</td>
                           <td>{formatNumber(line.tunch)}</td>
                           <td>{formatNumber(line.wastage)}</td>
-                          <td>{formatNumber(line.hishob)}</td>
-                          <td>{formatNumber(line.fine)}</td>
-                          <td>{formatNumber(line.labourRate)}</td>
                           <td>{line.labourRateType}</td>
+                          <td>{formatNumber(line.labourRate)}</td>
+                          <td>{formatNumber(line.fine)}</td>
                           <td>{formatNumber(line.majuri)}</td>
                           <td>
                             <button
-                              className="table-delete"
+                              className="btn-delete-small"
+                              type="button"
                               onClick={() => setItemDeleteTarget(line)}
                             >
-                              Delete
+                              Remove
                             </button>
                           </td>
                         </tr>
@@ -986,6 +1030,33 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              <div className="sale-item-summary-row">
+                <div>
+                  <span>Pcs</span>
+                  <strong>{formatNumber(itemSummaryTotals.pcs)}</strong>
+                </div>
+
+                <div>
+                  <span>Gr. Wt.</span>
+                  <strong>{formatNumber(itemSummaryTotals.grossWeight)}</strong>
+                </div>
+
+                <div>
+                  <span>Net Wt.</span>
+                  <strong>{formatNumber(itemSummaryTotals.netWeight)}</strong>
+                </div>
+
+                <div>
+                  <span>Fine</span>
+                  <strong>{formatNumber(itemFineTotal)}</strong>
+                </div>
+
+                <div>
+                  <span>Majuri</span>
+                  <strong>{formatNumber(itemMajuriTotal)}</strong>
+                </div>
               </div>
 
               <div className="sale-payment-panel">

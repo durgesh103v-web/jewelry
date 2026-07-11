@@ -46,6 +46,7 @@ function runMigrations(database: Database.Database): void {
       account_group_id TEXT NOT NULL,
       mobile_number TEXT DEFAULT '',
       whatsapp_number TEXT DEFAULT '',
+      address TEXT DEFAULT '',
       city TEXT DEFAULT '',
       state TEXT DEFAULT '',
       gst_no TEXT DEFAULT '',
@@ -153,8 +154,10 @@ function runMigrations(database: Database.Database): void {
       tanch REAL NOT NULL DEFAULT 0,
       wastage REAL NOT NULL DEFAULT 0,
       hishob REAL NOT NULL DEFAULT 0,
-      unit TEXT DEFAULT 'GM',
+      unit TEXT DEFAULT 'Kg',
       fine REAL NOT NULL DEFAULT 0,
+      majuri_rate REAL NOT NULL DEFAULT 0,
+      majuri REAL NOT NULL DEFAULT 0,
       active INTEGER NOT NULL DEFAULT 1,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
@@ -446,6 +449,13 @@ function runMigrations(database: Database.Database): void {
   `)
 
   database.exec(`
+    CREATE TABLE IF NOT EXISTS app_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT DEFAULT '',
+      updated_at TEXT NOT NULL
+    );
+  `)
+  database.exec(`
     CREATE TABLE IF NOT EXISTS printer_settings (
       id TEXT PRIMARY KEY,
       paper_size TEXT NOT NULL DEFAULT 'A4',
@@ -487,6 +497,54 @@ function runMigrations(database: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_cash_vouchers_date
     ON cash_vouchers(voucher_date);
   `)
+
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS cash_fine_opening_settings (
+      id TEXT PRIMARY KEY,
+      gold_purchase_fine REAL NOT NULL DEFAULT 0,
+      gold_purchase_amount REAL NOT NULL DEFAULT 0,
+      gold_sale_fine REAL NOT NULL DEFAULT 0,
+      gold_sale_amount REAL NOT NULL DEFAULT 0,
+      silver_purchase_fine REAL NOT NULL DEFAULT 0,
+      silver_purchase_amount REAL NOT NULL DEFAULT 0,
+      silver_sale_fine REAL NOT NULL DEFAULT 0,
+      silver_sale_amount REAL NOT NULL DEFAULT 0,
+      opening_cash REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS cash_fine_opening_lines (
+      id TEXT PRIMARY KEY,
+      line_no INTEGER NOT NULL,
+      metal_type TEXT NOT NULL,
+      entry_type TEXT NOT NULL DEFAULT '',
+      details TEXT DEFAULT '',
+      weight REAL NOT NULL DEFAULT 0,
+      tanch REAL NOT NULL DEFAULT 0,
+      fine REAL NOT NULL DEFAULT 0,
+      pt_status TEXT DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_cash_fine_opening_lines_metal
+    ON cash_fine_opening_lines(metal_type);
+  `)
+  addColumnIfMissing(
+    database,
+    'accounts',
+    'account_type',
+    "TEXT NOT NULL DEFAULT 'Wholesale Customer'"
+  )
+  addColumnIfMissing(database, 'accounts', 'last_date', "TEXT DEFAULT ''")
+  addColumnIfMissing(database, 'accounts', 'gold_fine_limit', 'REAL NOT NULL DEFAULT 0')
+  addColumnIfMissing(database, 'accounts', 'silver_fine_limit', 'REAL NOT NULL DEFAULT 0')
+  addColumnIfMissing(database, 'accounts', 'phone2', "TEXT DEFAULT ''")
+  addColumnIfMissing(database, 'accounts', 'address', "TEXT DEFAULT ''")
+  addColumnIfMissing(database, 'accounts', 'notification', "TEXT DEFAULT ''")
+  addColumnIfMissing(database, 'item_opening_stock', 'majuri_rate', 'REAL NOT NULL DEFAULT 0')
+  addColumnIfMissing(database, 'item_opening_stock', 'majuri', 'REAL NOT NULL DEFAULT 0')
   addColumnIfMissing(database, 'items', 'default_tanch', 'REAL NOT NULL DEFAULT 0')
   addColumnIfMissing(database, 'items', 'default_wastage', 'REAL NOT NULL DEFAULT 0')
   addColumnIfMissing(database, 'items', 'default_labour_rate', 'REAL NOT NULL DEFAULT 0')

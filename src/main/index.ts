@@ -16,6 +16,7 @@ import { registerBackupIpc } from './ipc/backup.ipc'
 import { registerFirmIpc } from './ipc/firm.ipc'
 import { registerPrinterSettingIpc } from './ipc/printerSetting.ipc'
 import { registerCashVoucherIpc } from './ipc/cashVoucher.ipc'
+import { registerCashFineOpeningIpc } from './ipc/cashFineOpening.ipc'
 
 function createWindow(): void {
   // Create the browser window.
@@ -85,6 +86,7 @@ app.whenReady().then(() => {
   registerFirmIpc()
   registerPrinterSettingIpc()
   registerCashVoucherIpc()
+  registerCashFineOpeningIpc()
 
   createWindow()
 

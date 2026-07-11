@@ -6,6 +6,10 @@ export function registerBackupIpc(): void {
     return backupService.createBackup()
   })
 
+  ipcMain.handle('backup:get-last', () => {
+    return backupService.getLastBackup()
+  })
+
   ipcMain.handle('backup:restore', () => {
     return backupService.restoreBackup()
   })

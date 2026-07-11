@@ -61,8 +61,8 @@ const initialForm = {
   defaultDesignId: '',
   barcodeItem: false,
   barcodeType: '',
-  labourChargesBy: 'Weight',
-  salePurchaseBy: 'Weight',
+  labourChargesBy: 'Kg',
+  salePurchaseBy: 'Fine',
   gstHsnCode: '',
   fixedWeightPerPcs: '',
   defaultTanch: '',
@@ -112,7 +112,7 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
   const itemGroupSelectRef = useRef<HTMLSelectElement | null>(null)
   const stampSelectRef = useRef<HTMLSelectElement | null>(null)
   const designSelectRef = useRef<HTMLSelectElement | null>(null)
-  const barcodeCheckboxRef = useRef<HTMLInputElement | null>(null)
+  const barcodeItemSelectRef = useRef<HTMLSelectElement | null>(null)
   const barcodeTypeSelectRef = useRef<HTMLSelectElement | null>(null)
   const labourChargesSelectRef = useRef<HTMLSelectElement | null>(null)
   const salePurchaseSelectRef = useRef<HTMLSelectElement | null>(null)
@@ -302,8 +302,12 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
       defaultDesignId: item.defaultDesignId,
       barcodeItem: item.barcodeItem,
       barcodeType: item.barcodeType,
-      labourChargesBy: item.labourChargesBy,
-      salePurchaseBy: item.salePurchaseBy,
+      labourChargesBy: ['Kg', 'Gm', 'Pcs'].includes(item.labourChargesBy)
+        ? item.labourChargesBy
+        : 'Kg',
+      salePurchaseBy: ['Fine', 'Weight', 'Pcs'].includes(item.salePurchaseBy)
+        ? item.salePurchaseBy
+        : 'Fine',
       gstHsnCode: item.gstHsnCode,
       fixedWeightPerPcs: item.fixedWeightPerPcs === 0 ? '' : String(item.fixedWeightPerPcs),
       defaultTanch: item.defaultTanch === 0 ? '' : String(item.defaultTanch),
@@ -466,10 +470,8 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
                   onChange={(event) => handleMetalChange(event.target.value)}
                   onKeyDown={(event) => focusNextOnEnter(event, itemGroupSelectRef.current)}
                 >
-                  <option>Gold</option>
-                  <option>Silver</option>
-                  <option>Diamond</option>
-                  <option>Other</option>
+                  <option value="Gold">GOLD</option>
+                  <option value="Silver">SILVER</option>
                 </select>
               </div>
 
@@ -531,7 +533,7 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
                       defaultDesignId: event.target.value
                     }))
                   }
-                  onKeyDown={(event) => focusNextOnEnter(event, barcodeCheckboxRef.current)}
+                  onKeyDown={(event) => focusNextOnEnter(event, barcodeItemSelectRef.current)}
                 >
                   <option value="">Select Design</option>
                   {activeDesigns.map((design) => (
@@ -542,26 +544,24 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
                 </select>
               </div>
 
-              <div className="form-field active-field">
+              <div className="form-field">
                 <label htmlFor="item-master-barcode-item">Barcode Item</label>
-                <input
+                <select
                   id="item-master-barcode-item"
-                  ref={barcodeCheckboxRef}
-                  type="checkbox"
-                  checked={form.barcodeItem}
+                  ref={barcodeItemSelectRef}
+                  value={form.barcodeItem ? 'Yes' : 'No'}
                   onChange={(event) =>
                     setForm((current) => ({
                       ...current,
-                      barcodeItem: event.target.checked
+                      barcodeItem: event.target.value === 'Yes',
+                      barcodeType: event.target.value === 'Yes' ? current.barcodeType : ''
                     }))
                   }
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault()
-                      packWeightInputRef.current?.focus()
-                    }
-                  }}
-                />
+                  onKeyDown={(event) => focusNextOnEnter(event, packWeightInputRef.current)}
+                >
+                  <option>Yes</option>
+                  <option>No</option>
+                </select>
               </div>
             </div>
 
@@ -706,11 +706,10 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
                   }
                   onKeyDown={(event) => focusNextOnEnter(event, labourChargesSelectRef.current)}
                 >
-                  <option value="">None</option>
-                  <option>Auto</option>
-                  <option>Manual</option>
-                  <option>Weight Wise</option>
-                  <option>Pcs Wise</option>
+                  <option value="">No</option>
+                  <option value="CODE128">CODE128</option>
+                  <option value="QR">QR</option>
+                  <option value="EAN13">EAN13</option>
                 </select>
               </div>
 
@@ -728,9 +727,9 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
                   }
                   onKeyDown={(event) => focusNextOnEnter(event, salePurchaseSelectRef.current)}
                 >
-                  <option>Weight</option>
-                  <option>Pcs</option>
-                  <option>Fixed</option>
+                  <option value="Kg">Kg</option>
+                  <option value="Gm">Gm</option>
+                  <option value="Pcs">Pcs</option>
                 </select>
               </div>
 
@@ -748,8 +747,9 @@ function ItemMasterScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
                   }
                   onKeyDown={(event) => focusNextOnEnter(event, hsnInputRef.current)}
                 >
-                  <option>Weight</option>
-                  <option>Pcs</option>
+                  <option value="Fine">Fine</option>
+                  <option value="Weight">Weight</option>
+                  <option value="Pcs">Pcs</option>
                 </select>
               </div>
 

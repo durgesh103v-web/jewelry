@@ -94,7 +94,8 @@ type ItemOpeningStockPayload = {
   tanch: number
   wastage: number
   hishob: number
-  unit: string
+  unit: 'Kg' | 'Gm' | 'Pcs'
+  majuriRate: number
   active: boolean
 }
 
@@ -106,6 +107,7 @@ type ItemOpeningStockRecord = ItemOpeningStockPayload & {
   designName: string
   netWeight: number
   fine: number
+  majuri: number
   createdAt: string
   updatedAt: string
 }
@@ -313,6 +315,40 @@ type CashVoucherRecord = {
   narration: string
   createdAt: string
   updatedAt: string
+}
+
+type CashFineOpeningLinePayload = {
+  metalType: 'Gold' | 'Silver'
+  entryType: string
+  details: string
+  weight: number
+  tanch: number
+  ptStatus: string
+}
+
+type CashFineOpeningLineRecord = CashFineOpeningLinePayload & {
+  id: string
+  lineNo: number
+  fine: number
+  createdAt: string
+  updatedAt: string
+}
+
+type CashFineOpeningSummaryPayload = {
+  goldPurchaseFine: number
+  goldPurchaseAmount: number
+  goldSaleFine: number
+  goldSaleAmount: number
+  silverPurchaseFine: number
+  silverPurchaseAmount: number
+  silverSaleFine: number
+  silverSaleAmount: number
+  openingCash: number
+}
+
+type CashFineOpeningRecord = {
+  summary: CashFineOpeningSummaryPayload
+  lines: CashFineOpeningLineRecord[]
 }
 type AccountBalanceRecord = {
   goldFine: number
@@ -567,7 +603,14 @@ type BackupResult = {
   cancelled: boolean
   fileName?: string
   backupPath?: string
+  backupAt?: string
   message: string
+}
+
+type LastBackupInfo = {
+  backupAt: string
+  fileName: string
+  backupPath: string
 }
 
 type FirmPayload = {
@@ -618,18 +661,25 @@ type PrinterSettingRecord = PrinterSettingPayload & {
 type AccountPayload = {
   accountName: string
   otherName: string
+  accountType: string
   accountGroupId: string
   mobileNumber: string
   whatsappNumber: string
+  phone2: string
+  address: string
   city: string
   state: string
   gstNo: string
   panNo: string
+  lastDate: string
   openingGoldFine: number
   openingSilverFine: number
   openingCash: number
   openingAnamat: number
   openingBank: number
+  goldFineLimit: number
+  silverFineLimit: number
+  notification: string
   active: boolean
 }
 
@@ -701,6 +751,14 @@ interface Window {
       getById: (id: string) => Promise<CashVoucherRecord>
       list: (filter?: CashVoucherFilter) => Promise<CashVoucherRecord[]>
     }
+
+    cashFineOpening: {
+      get: () => Promise<CashFineOpeningRecord>
+      save: (payload: {
+        lines: CashFineOpeningLinePayload[]
+        summary: CashFineOpeningSummaryPayload
+      }) => Promise<CashFineOpeningRecord>
+    }
     sales: {
       getNextNumber: () => Promise<string>
       getAccountBalance: (accountId: string) => Promise<AccountBalanceRecord>
@@ -733,6 +791,7 @@ interface Window {
 
     backup: {
       create: () => Promise<BackupResult>
+      getLast: () => Promise<LastBackupInfo>
       restore: () => Promise<BackupResult>
     }
 
