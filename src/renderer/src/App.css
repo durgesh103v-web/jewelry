@@ -5344,4 +5344,256 @@ button {
   color: #1a7f37;
 }
 
-.daily-summary-b
+.daily-summary-box-grid .nave strong {
+  color: #b42318;
+}
+
+.daily-summary-box-grid .closing strong {
+  color: #0b4a6f;
+}
+
+@media print {
+  .daily-summary-sections {
+    overflow: visible !important;
+  }
+
+  .daily-summary-section,
+  .daily-summary-box-grid div {
+    border-color: #000 !important;
+    break-inside: avoid;
+  }
+}
+
+.outstanding-report-screen .fine-report-window {
+  width: min(1180px, 100%);
+}
+
+.outstanding-toolbar {
+  grid-template-columns: 1fr 90px 90px 220px;
+}
+
+.outstanding-sections {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.outstanding-section {
+  background: white;
+  border: 1px solid var(--color-border);
+  padding: 10px;
+}
+
+.outstanding-section h4 {
+  margin: 0 0 8px;
+  color: #0b4a6f;
+  font-size: 14px;
+}
+
+.outstanding-section-count {
+  color: #52606d;
+  font-weight: 400;
+}
+
+.outstanding-totals-grid {
+  margin-bottom: 10px;
+}
+
+.outstanding-table-panel {
+  max-height: 320px;
+  overflow: auto;
+}
+
+@media print {
+  .outstanding-sections {
+    overflow: visible !important;
+  }
+
+  .outstanding-section {
+    border-color: #000 !important;
+    break-inside: avoid;
+  }
+
+  .outstanding-table-panel {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+
+.job-work-header-grid {
+  grid-template-columns: 115px 140px 1fr 130px 1fr 130px 130px 1fr;
+}
+
+.job-work-narration-field {
+  grid-column: span 2;
+}
+
+.job-work-receipt-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.job-work-receive-dialog {
+  width: min(900px, 100%);
+}
+
+.approval-badge.partial_received {
+  background: #eaf1ff;
+  border-color: #7ea8e6;
+  color: #1f3f8a;
+}
+
+.approval-badge.received {
+  background: #e8fff0;
+  border-color: #7bd99c;
+  color: #146c2e;
+}
+
+.approval-badge.cancelled {
+  background: #fde8e8;
+  border-color: #ef9c9c;
+  color: #8a1f1f;
+}
+
+.approval-badge.completed {
+  background: #eaf1ff;
+  border-color: #7ea8e6;
+  color: #1f3f8a;
+}
+
+.approval-badge.delivered {
+  background: #e8fff0;
+  border-color: #7bd99c;
+  color: #146c2e;
+}
+
+.repair-entry-header-grid {
+  grid-template-columns: 115px 140px 1fr 130px 130px 1fr 1fr 130px 1fr;
+}
+
+.repair-entry-narration-field {
+  grid-column: span 2;
+}
+
+.repair-entry-complete-dialog {
+  width: min(520px, 100%);
+}
+
+/* Delete Sale Bills */
+.restricted-usage-note {
+  background: #fff0f0;
+  border: 1px solid #f0a8a8;
+  color: #7a1f1f;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.void-reason-dialog {
+  width: min(480px, 100%);
+}
+
+.void-reason-field {
+  margin-top: 14px;
+  text-align: left;
+}
+
+.void-reason-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #111827;
+}
+
+.void-reason-field textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--color-border);
+  padding: 8px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.required-mark {
+  color: #c51616;
+}
+
+/* Reminder */
+.overdue-count {
+  color: #c51616;
+}
+
+/* WhatsApp */
+.whatsapp-balance-preview {
+  background: #f4f7f8;
+  border: 1px solid var(--color-border);
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #33475b;
+}
+
+.whatsapp-screen textarea,
+.screenshot-screen textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--color-border);
+  padding: 8px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+/* Settings hub */
+.settings-window {
+  width: min(820px, 100%);
+}
+
+.settings-intro {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: #33475b;
+}
+
+.settings-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.settings-tile {
+  background: white;
+  border: 1px solid var(--color-border);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.settings-tile:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(13, 79, 122, 0.18);
+}
+
+.settings-tile-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.settings-tile strong {
+  font-size: 15px;
+  color: var(--color-primary);
+}
+
+.settings-tile small {
+  font-size: 12px;
+  color: #52606d;
+  line-height: 1.4;
+}
