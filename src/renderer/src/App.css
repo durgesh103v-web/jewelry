@@ -1,7 +1,7 @@
 :root {
   /* Color tokens - modern flat/minimal palette */
-  --color-primary: #2563eb;
-  --color-primary-dark: #1d4ed8;
+  --color-primary: #1a73e8;
+  --color-primary-dark: #1557b0;
   --color-bg-app: #eef1f5;
   --color-bg-panel: #ffffff;
   --color-bg-subtle: #f4f6f9;
@@ -81,7 +81,7 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
 }
 
 .app {
@@ -287,7 +287,7 @@ textarea:focus {
 }
 
 .kpi-receivable {
-  border-left-color: #1d4ed8;
+  border-left-color: var(--color-primary-dark);
 }
 
 .kpi-payable {
@@ -2410,7 +2410,7 @@ textarea:focus {
 
 .type-badge.sale {
   background: #eff6ff;
-  color: #1d4ed8;
+  color: var(--color-primary-dark);
 }
 
 .type-badge.purchase {
