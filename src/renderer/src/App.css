@@ -1200,7 +1200,7 @@ textarea:focus {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .form-panel,
@@ -1286,7 +1286,7 @@ textarea:focus {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
   padding: 14px;
 }
 .item-stamp-screen {
@@ -1314,7 +1314,7 @@ textarea:focus {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
   padding: 14px;
 }
 .item-design-screen {
@@ -1342,7 +1342,7 @@ textarea:focus {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
   padding: 14px;
 }
 .item-master-screen {
@@ -1370,7 +1370,7 @@ textarea:focus {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
   padding: 14px;
 }
 
@@ -1429,7 +1429,7 @@ textarea:focus {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
   padding: 14px;
 }
 
@@ -1510,7 +1510,7 @@ textarea:focus {
   flex: 1;
   min-height: 0;
   padding: 10px;
-  overflow: hidden;
+  overflow: auto;
   display: flex;
   flex-direction: column;
 }
@@ -2031,7 +2031,7 @@ textarea:focus {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .sale-register-toolbar {
@@ -2133,7 +2133,7 @@ textarea:focus {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .account-balance-toolbar {
@@ -2225,7 +2225,7 @@ textarea:focus {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .accountwise-details-toolbar {
@@ -2454,7 +2454,7 @@ textarea:focus {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .item-stock-toolbar {
@@ -2604,7 +2604,7 @@ textarea:focus {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .item-transaction-toolbar {
@@ -3005,7 +3005,7 @@ textarea:focus {
   padding: 14px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .printer-setting-layout {
@@ -3354,7 +3354,7 @@ textarea:focus {
   padding: 10px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .purchase-main-layout {
@@ -3509,7 +3509,7 @@ textarea:focus {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .purchase-register-toolbar {
@@ -3602,7 +3602,7 @@ textarea:focus {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .account-wise-sp-toolbar {
@@ -3698,7 +3698,7 @@ textarea:focus {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .cash-voucher-layout {
@@ -3910,7 +3910,7 @@ textarea:focus {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .cash-book-toolbar {
@@ -4649,7 +4649,7 @@ textarea:focus {
   padding: 10px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .cash-fine-entry-panel {
@@ -5040,7 +5040,7 @@ textarea:focus {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .gst-report-toolbar {
@@ -5201,7 +5201,7 @@ textarea:focus {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .fine-report-toolbar {
