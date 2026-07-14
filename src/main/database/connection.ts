@@ -23,6 +23,10 @@ function runMigrations(database: Database.Database): void {
   database.exec(`
     PRAGMA foreign_keys = ON;
     PRAGMA journal_mode = WAL;
+    PRAGMA synchronous = NORMAL;
+    PRAGMA busy_timeout = 5000;
+    PRAGMA cache_size = -16000;
+    PRAGMA temp_store = MEMORY;
 
     CREATE TABLE IF NOT EXISTS account_groups (
       id TEXT PRIMARY KEY,
@@ -320,6 +324,21 @@ function runMigrations(database: Database.Database): void {
 
     CREATE INDEX IF NOT EXISTS idx_account_ledger_source
     ON account_ledger(source_type, source_id);
+
+    -- Date-ranged report queries (Account Ledger, Cash Book, Daily, Outstanding)
+    -- filter/scan by entry_date, usually scoped to an account. These indexes let
+    -- SQLite seek instead of scanning the whole ledger.
+    CREATE INDEX IF NOT EXISTS idx_account_ledger_account_date
+    ON account_ledger(account_id, entry_date);
+
+    CREATE INDEX IF NOT EXISTS idx_account_ledger_date
+    ON account_ledger(entry_date);
+
+    CREATE INDEX IF NOT EXISTS idx_stock_ledger_item_date
+    ON stock_ledger(item_id, entry_date);
+
+    CREATE INDEX IF NOT EXISTS idx_stock_ledger_date
+    ON stock_ledger(entry_date);
   `)
   database.exec(`
     CREATE TABLE IF NOT EXISTS purchase_headers (

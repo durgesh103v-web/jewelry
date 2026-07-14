@@ -184,8 +184,40 @@ export const accountBalanceService = {
       )
       .all() as AccountBalanceReportAccountRow[]
 
+    // Single grouped aggregate over the whole ledger instead of one query per
+    // account (previously an N+1: getAccountBalance() was called in a loop).
+    // Turns N+1 round-trips into 2 for the entire balances list.
+    const ledgerSums = db
+      .prepare(
+        `
+        SELECT
+          account_id,
+          COALESCE(SUM(CASE WHEN metal_type = 'Gold' THEN fine_nave ELSE 0 END), 0) AS gold_fine_nave,
+          COALESCE(SUM(CASE WHEN metal_type = 'Gold' THEN fine_jama ELSE 0 END), 0) AS gold_fine_jama,
+          COALESCE(SUM(CASE WHEN metal_type = 'Silver' THEN fine_nave ELSE 0 END), 0) AS silver_fine_nave,
+          COALESCE(SUM(CASE WHEN metal_type = 'Silver' THEN fine_jama ELSE 0 END), 0) AS silver_fine_jama,
+          COALESCE(SUM(cash_nave), 0) AS cash_nave,
+          COALESCE(SUM(cash_jama), 0) AS cash_jama,
+          COALESCE(SUM(bank_nave), 0) AS bank_nave,
+          COALESCE(SUM(bank_jama), 0) AS bank_jama,
+          COALESCE(SUM(anamat_nave), 0) AS anamat_nave,
+          COALESCE(SUM(anamat_jama), 0) AS anamat_jama
+        FROM account_ledger
+        GROUP BY account_id
+      `
+      )
+      .all() as (LedgerSumRow & { account_id: string })[]
+
+    const sumsByAccountId = new Map(ledgerSums.map((row) => [row.account_id, row]))
+
     return accounts.map((account) => {
-      const balance = this.getAccountBalance(account.id)
+      const sums = sumsByAccountId.get(account.id)
+
+      const openingGoldFine = Number(account.opening_gold_fine ?? 0)
+      const openingSilverFine = Number(account.opening_silver_fine ?? 0)
+      const openingCash = Number(account.opening_cash ?? 0)
+      const openingAnamat = Number(account.opening_anamat ?? 0)
+      const openingBank = Number(account.opening_bank ?? 0)
 
       return {
         id: account.id,
@@ -194,16 +226,22 @@ export const accountBalanceService = {
         mobileNumber: account.mobile_number,
         city: account.city,
         groupName: account.group_name,
-        openingGoldFine: Number(account.opening_gold_fine ?? 0),
-        openingSilverFine: Number(account.opening_silver_fine ?? 0),
-        openingCash: Number(account.opening_cash ?? 0),
-        openingAnamat: Number(account.opening_anamat ?? 0),
-        openingBank: Number(account.opening_bank ?? 0),
-        goldFine: balance.goldFine,
-        silverFine: balance.silverFine,
-        cash: balance.cash,
-        anamat: balance.anamat,
-        bank: balance.bank
+        openingGoldFine,
+        openingSilverFine,
+        openingCash,
+        openingAnamat,
+        openingBank,
+        goldFine:
+          openingGoldFine +
+          Number(sums?.gold_fine_nave ?? 0) -
+          Number(sums?.gold_fine_jama ?? 0),
+        silverFine:
+          openingSilverFine +
+          Number(sums?.silver_fine_nave ?? 0) -
+          Number(sums?.silver_fine_jama ?? 0),
+        cash: openingCash + Number(sums?.cash_nave ?? 0) - Number(sums?.cash_jama ?? 0),
+        anamat: openingAnamat + Number(sums?.anamat_nave ?? 0) - Number(sums?.anamat_jama ?? 0),
+        bank: openingBank + Number(sums?.bank_nave ?? 0) - Number(sums?.bank_jama ?? 0)
       }
     })
   },

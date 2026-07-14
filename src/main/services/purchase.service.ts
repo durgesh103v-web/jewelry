@@ -322,9 +322,10 @@ export const purchaseService = {
         now
       )
 
-      for (const line of preparedItemLines) {
-        db.prepare(
-          `
+      // Prepared statements hoisted out of the loop so each line reuses one
+      // compiled statement instead of recompiling the SQL on every iteration.
+      const insertPurchaseItemLine = db.prepare(
+        `
           INSERT INTO purchase_item_lines (
             id,
             purchase_id,
@@ -355,7 +356,31 @@ export const purchaseService = {
           )
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `
-        ).run(
+      )
+      const insertPurchaseStockLedger = db.prepare(
+        `
+          INSERT INTO stock_ledger (
+            id,
+            source_type,
+            source_id,
+            entry_date,
+            item_id,
+            stamp_id,
+            design_id,
+            metal_type,
+            pcs_delta,
+            gross_weight_delta,
+            net_weight_delta,
+            fine_delta,
+            narration,
+            created_at
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `
+      )
+
+      for (const line of preparedItemLines) {
+        insertPurchaseItemLine.run(
           line.id,
           purchaseId,
           line.lineNo,
@@ -384,27 +409,7 @@ export const purchaseService = {
           now
         )
 
-        db.prepare(
-          `
-          INSERT INTO stock_ledger (
-            id,
-            source_type,
-            source_id,
-            entry_date,
-            item_id,
-            stamp_id,
-            design_id,
-            metal_type,
-            pcs_delta,
-            gross_weight_delta,
-            net_weight_delta,
-            fine_delta,
-            narration,
-            created_at
-          )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `
-        ).run(
+        insertPurchaseStockLedger.run(
           uuidv4(),
           'PURCHASE',
           purchaseId,
@@ -422,9 +427,8 @@ export const purchaseService = {
         )
       }
 
-      for (const line of preparedPaymentLines) {
-        db.prepare(
-          `
+      const insertPurchasePaymentLine = db.prepare(
+        `
           INSERT INTO purchase_payment_lines (
             id,
             purchase_id,
@@ -449,7 +453,10 @@ export const purchaseService = {
           )
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `
-        ).run(
+      )
+
+      for (const line of preparedPaymentLines) {
+        insertPurchasePaymentLine.run(
           line.id,
           purchaseId,
           line.lineNo,

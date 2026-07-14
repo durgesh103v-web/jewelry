@@ -7,6 +7,7 @@ import {
   calculateFineFromHishob,
   calculateHishob,
   calculateSaleItemTotals,
+  roundNumber,
   type LabourRateType
 } from './jewelleryFormula.service'
 import { saleNumberService } from './saleNumber.service'
@@ -202,32 +203,48 @@ export const saleService = {
       }
     })
 
-    const itemFineTotal = preparedItemLines.reduce((total, line) => total + line.fine, 0)
-    const itemMajuriTotal = preparedItemLines.reduce((total, line) => total + line.majuri, 0)
-    const paymentFineJamaTotal = preparedPaymentLines
-      .filter((line) => line.jamaNave === 'JAMA')
-      .reduce((total, line) => total + line.fine, 0)
-    const paymentCashJamaTotal = preparedPaymentLines
-      .filter((line) => line.jamaNave === 'JAMA')
-      .reduce((total, line) => total + line.cash, 0)
-    const paymentBankJamaTotal = preparedPaymentLines
-      .filter((line) => line.jamaNave === 'JAMA')
-      .reduce((total, line) => total + line.bank, 0)
-    const paymentAnamatJamaTotal = preparedPaymentLines
-      .filter((line) => line.jamaNave === 'JAMA')
-      .reduce((total, line) => total + line.anamat, 0)
+    // All totals are rounded consistently with purchase/return services so the
+    // header, account_ledger, and closing balances never store floating-point
+    // noise: fine to 3 decimals, currency (majuri/cash/bank/anamat) to whole units.
+    //
+    // Every sale payment line is a JAMA (amount received) in this app - the Sale
+    // screen only ever produces JAMA lines. All lines are therefore summed with
+    // no jama/nave filtering, which guarantees no entered payment is silently
+    // dropped from the totals or the account ledger.
+    const itemFineTotal = roundNumber(
+      preparedItemLines.reduce((total, line) => total + line.fine, 0)
+    )
+    const itemMajuriTotal = roundNumber(
+      preparedItemLines.reduce((total, line) => total + line.majuri, 0),
+      0
+    )
+    const paymentFineJamaTotal = roundNumber(
+      preparedPaymentLines.reduce((total, line) => total + line.fine, 0)
+    )
+    const paymentCashJamaTotal = roundNumber(
+      preparedPaymentLines.reduce((total, line) => total + line.cash, 0),
+      0
+    )
+    const paymentBankJamaTotal = roundNumber(
+      preparedPaymentLines.reduce((total, line) => total + line.bank, 0),
+      0
+    )
+    const paymentAnamatJamaTotal = roundNumber(
+      preparedPaymentLines.reduce((total, line) => total + line.anamat, 0),
+      0
+    )
 
     const closingGoldFine =
       data.metalType === 'Gold'
-        ? oldBalance.goldFine + itemFineTotal - paymentFineJamaTotal
+        ? roundNumber(oldBalance.goldFine + itemFineTotal - paymentFineJamaTotal)
         : oldBalance.goldFine
     const closingSilverFine =
       data.metalType === 'Silver'
-        ? oldBalance.silverFine + itemFineTotal - paymentFineJamaTotal
+        ? roundNumber(oldBalance.silverFine + itemFineTotal - paymentFineJamaTotal)
         : oldBalance.silverFine
-    const closingCash = oldBalance.cash + itemMajuriTotal - paymentCashJamaTotal
-    const closingBank = oldBalance.bank - paymentBankJamaTotal
-    const closingAnamat = oldBalance.anamat - paymentAnamatJamaTotal
+    const closingCash = roundNumber(oldBalance.cash + itemMajuriTotal - paymentCashJamaTotal, 0)
+    const closingBank = roundNumber(oldBalance.bank - paymentBankJamaTotal, 0)
+    const closingAnamat = roundNumber(oldBalance.anamat - paymentAnamatJamaTotal, 0)
 
     const transaction = db.transaction(() => {
       db.prepare(
@@ -295,9 +312,10 @@ export const saleService = {
         now
       )
 
-      for (const line of preparedItemLines) {
-        db.prepare(
-          `
+      // Prepared statements are hoisted out of the loop so each line reuses one
+      // compiled statement instead of recompiling the SQL on every iteration.
+      const insertSaleItemLine = db.prepare(
+        `
           INSERT INTO sale_item_lines (
             id,
             sale_id,
@@ -328,7 +346,31 @@ export const saleService = {
           )
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `
-        ).run(
+      )
+      const insertSaleStockLedger = db.prepare(
+        `
+          INSERT INTO stock_ledger (
+            id,
+            source_type,
+            source_id,
+            entry_date,
+            item_id,
+            stamp_id,
+            design_id,
+            metal_type,
+            pcs_delta,
+            gross_weight_delta,
+            net_weight_delta,
+            fine_delta,
+            narration,
+            created_at
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `
+      )
+
+      for (const line of preparedItemLines) {
+        insertSaleItemLine.run(
           line.id,
           saleId,
           line.lineNo,
@@ -357,27 +399,7 @@ export const saleService = {
           now
         )
 
-        db.prepare(
-          `
-          INSERT INTO stock_ledger (
-            id,
-            source_type,
-            source_id,
-            entry_date,
-            item_id,
-            stamp_id,
-            design_id,
-            metal_type,
-            pcs_delta,
-            gross_weight_delta,
-            net_weight_delta,
-            fine_delta,
-            narration,
-            created_at
-          )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `
-        ).run(
+        insertSaleStockLedger.run(
           uuidv4(),
           'SALE',
           saleId,
@@ -395,9 +417,8 @@ export const saleService = {
         )
       }
 
-      for (const line of preparedPaymentLines) {
-        db.prepare(
-          `
+      const insertSalePaymentLine = db.prepare(
+        `
           INSERT INTO sale_payment_lines (
             id,
             sale_id,
@@ -422,7 +443,10 @@ export const saleService = {
           )
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `
-        ).run(
+      )
+
+      for (const line of preparedPaymentLines) {
+        insertSalePaymentLine.run(
           line.id,
           saleId,
           line.lineNo,
