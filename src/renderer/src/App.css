@@ -1,23 +1,24 @@
 :root {
-  /* Color tokens */
-  --color-primary: #0d4f7a;
-  --color-primary-dark: #0e5f86;
-  --color-bg-app: #2f4356;
-  --color-bg-panel: #f2f6f8;
-  --color-border: #c7d2da;
-  --color-border-input: #bfcbd3;
+  /* Color tokens - modern flat/minimal palette */
+  --color-primary: #2563eb;
+  --color-primary-dark: #1d4ed8;
+  --color-bg-app: #eef1f5;
+  --color-bg-panel: #ffffff;
+  --color-bg-subtle: #f4f6f9;
+  --color-border: #e2e5eb;
+  --color-border-input: #d6dbe3;
   --color-white: #ffffff;
-  --color-text: #111827;
-  --color-text-muted: #52606d;
-  --color-success: #047857;
-  --color-success-bg: #e8fff0;
-  --color-success-border: #7bd99c;
-  --color-danger: #b91c1c;
-  --color-danger-bg: #fff0f0;
-  --color-danger-border: #ff9c9c;
-  --color-warning: #805600;
-  --color-warning-bg: #fff8db;
-  --color-warning-border: #e6c85f;
+  --color-text: #1f2430;
+  --color-text-muted: #6b7280;
+  --color-success: #059669;
+  --color-success-bg: #ecfdf5;
+  --color-success-border: #a7f3d0;
+  --color-danger: #dc2626;
+  --color-danger-bg: #fef2f2;
+  --color-danger-border: #fecaca;
+  --color-warning: #b45309;
+  --color-warning-bg: #fffbeb;
+  --color-warning-border: #fde68a;
 
   /* Spacing scale */
   --space-1: 4px;
@@ -31,8 +32,10 @@
   /* Shell sizing */
   --topbar-height: 34px;
   --bottomtabs-height: 32px;
-  --radius-sm: 3px;
-  --shadow-window: 0 6px 18px rgba(0, 0, 0, 0.25);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --shadow-window: 0 10px 30px rgba(15, 23, 42, 0.14);
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.08);
 
   /* Window width tokens (screens cap at these but shrink to fit smaller viewports) */
   --window-xs: 720px;
@@ -69,6 +72,16 @@ select {
 
 button {
   color: inherit;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .app {
@@ -574,9 +587,10 @@ button {
 .module-window {
   width: min(720px, 100%);
   min-height: 320px;
-  background: #f4f7f8;
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
 }
 
 .module-title-bar {
@@ -588,6 +602,7 @@ button {
   justify-content: space-between;
   padding: 0 10px;
   font-size: 14px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 .module-body {
@@ -652,8 +667,9 @@ button {
   width: min(920px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
 }
 
 .form-title-bar {
@@ -666,6 +682,7 @@ button {
   padding: 0 8px 0 12px;
   font-size: 15px;
   font-weight: 600;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 .account-group-body {
@@ -673,8 +690,9 @@ button {
 }
 
 .form-panel {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 14px;
   margin-bottom: 14px;
 }
@@ -696,6 +714,7 @@ button {
 .form-row select {
   height: 30px;
   border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-sm);
   padding: 0 8px;
   font-size: 14px;
   background: white;
@@ -722,16 +741,19 @@ button {
 }
 
 .btn-new {
-  background: #d9e8f5;
+  background: var(--color-bg-subtle);
+  color: var(--color-primary);
 }
 
 .btn-save {
-  background: #72d99f;
+  background: var(--color-success);
+  color: white;
 }
 
 .table-panel {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   flex: 1;
   min-height: 160px;
   overflow: auto;
@@ -744,17 +766,21 @@ button {
 }
 
 .table-panel th {
-  background: #1e5a7a;
-  color: white;
-  height: 30px;
+  background: var(--color-bg-subtle);
+  color: var(--color-text);
+  height: 32px;
   border: 1px solid var(--color-border);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .table-panel td {
   height: 30px;
-  border: 1px solid #d5dde3;
+  border: 1px solid var(--color-border);
   padding: 0 8px;
+}
+
+.table-panel tbody tr:hover td {
+  background: var(--color-bg-subtle);
 }
 
 .empty-row {
@@ -773,15 +799,18 @@ button {
 }
 
 .table-edit {
-  background: #cfe7ff;
+  background: var(--color-bg-subtle);
+  color: var(--color-primary);
 }
 
 .table-delete {
-  background: #ffb5b5;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
 }
 
 .btn-cancel-edit {
-  background: #ffb5b5;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
 }
 .module-title-actions {
   display: flex;
@@ -808,7 +837,7 @@ button {
   margin-bottom: 12px;
   min-height: 42px;
   padding: 10px 12px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -857,8 +886,9 @@ button {
 .confirm-dialog {
   width: min(420px, 100%);
   background: #ffffff;
-  border: 1px solid #aebdca;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   padding: 20px;
 }
 
@@ -959,9 +989,10 @@ button {
   cursor: not-allowed;
 }
 .list-toolbar {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
   border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   padding: 8px 10px;
   display: flex;
   align-items: center;
@@ -983,6 +1014,7 @@ button {
   width: 330px;
   height: 28px;
   border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-sm);
   padding: 0 8px;
   font-size: 14px;
 }
@@ -991,8 +1023,8 @@ button {
   width: 26px;
   height: 26px;
   border: none;
-  background: #ffdddd;
-  color: #9b0000;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
@@ -1008,18 +1040,20 @@ button {
 }
 
 .status-active {
-  background: #e8fff0;
-  color: #146c2e;
-  border: 1px solid #7bd99c;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--radius-sm);
   padding: 2px 8px;
   font-weight: 700;
   font-size: 12px;
 }
 
 .status-inactive {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 2px 8px;
   font-weight: 700;
   font-size: 12px;
@@ -1043,8 +1077,9 @@ button {
   width: min(1180px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
 }
 
 .account-master-body {
@@ -1052,15 +1087,18 @@ button {
 }
 
 .account-master-form-panel {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 14px;
   margin-bottom: 14px;
 }
 
 .section-title {
-  background: #e9f3f9;
-  border: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
+  border: none;
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-sm);
   color: var(--color-primary);
   font-weight: 700;
   font-size: 14px;
@@ -1097,6 +1135,7 @@ button {
 .form-field select {
   height: 30px;
   border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-sm);
   padding: 0 8px;
   font-size: 14px;
   background: white;
@@ -1233,8 +1272,9 @@ button {
   width: min(920px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -1260,8 +1300,9 @@ button {
   width: min(920px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -1287,8 +1328,9 @@ button {
   width: min(920px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -1314,8 +1356,9 @@ button {
   width: min(1180px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -1332,8 +1375,9 @@ button {
 }
 
 .item-master-form-panel {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 12px;
   margin-bottom: 12px;
   flex-shrink: 0;
@@ -1371,8 +1415,9 @@ button {
   width: min(1180px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -1389,8 +1434,9 @@ button {
 }
 
 .opening-stock-form-panel {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 12px;
   margin-bottom: 12px;
   flex-shrink: 0;
@@ -1451,8 +1497,9 @@ button {
   width: min(1180px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -1486,8 +1533,9 @@ button {
 }
 
 .sale-panel {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
   margin-bottom: 10px;
   flex-shrink: 0;
@@ -1549,8 +1597,9 @@ button {
 .sale-balance-panel {
   min-height: 0;
   overflow: auto;
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
 }
 
@@ -1608,8 +1657,9 @@ button {
 }
 
 .sale-payment-panel {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 8px;
   margin-top: 8px;
   flex-shrink: 0;
@@ -1660,9 +1710,10 @@ button {
 .print-preview-window {
   width: min(980px, 100%);
   max-height: 94vh;
-  background: #e9eef3;
-  border: 1px solid #6b8798;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   display: flex;
   flex-direction: column;
 }
@@ -1965,8 +2016,9 @@ button {
   width: min(1180px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -1983,8 +2035,9 @@ button {
 }
 
 .sale-register-toolbar {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
   display: flex;
   align-items: center;
@@ -2065,8 +2118,9 @@ button {
   width: min(1180px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -2083,8 +2137,9 @@ button {
 }
 
 .account-balance-toolbar {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
   display: flex;
   align-items: center;
@@ -2155,8 +2210,9 @@ button {
   width: min(1180px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -2173,8 +2229,9 @@ button {
 }
 
 .accountwise-details-toolbar {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
   display: grid;
   grid-template-columns: 330px 1fr 90px 90px;
@@ -2255,8 +2312,9 @@ button {
 }
 
 .accountwise-balance-box {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   display: grid;
   grid-template-columns: 120px repeat(5, 1fr);
   align-items: center;
@@ -2343,7 +2401,7 @@ button {
   align-items: center;
   min-height: 22px;
   padding: 3px 8px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   background: #eef2f7;
   color: #334155;
   font-size: 12px;
@@ -2381,8 +2439,9 @@ button {
   width: min(1180px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -2399,8 +2458,9 @@ button {
 }
 
 .item-stock-toolbar {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
   display: grid;
   grid-template-columns: 130px 1fr 90px 90px 230px;
@@ -2529,8 +2589,9 @@ button {
   width: min(1180px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -2547,8 +2608,9 @@ button {
 }
 
 .item-transaction-toolbar {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
   display: grid;
   grid-template-columns: 120px 150px 1fr 90px;
@@ -2624,8 +2686,9 @@ button {
   width: min(1180px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -2642,8 +2705,9 @@ button {
 }
 
 .barcode-printing-toolbar {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
   display: flex;
   flex-wrap: wrap;
@@ -2681,7 +2745,8 @@ button {
 
 .barcode-label {
   background: #ffffff;
-  border: 1px dashed #7c9bab;
+  border: 1px dashed var(--color-border-input);
+  border-radius: var(--radius-sm);
   padding: 8px;
   display: flex;
   flex-direction: column;
@@ -2741,8 +2806,9 @@ button {
   width: min(900px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -2924,8 +2990,9 @@ button {
   width: min(1040px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -2956,8 +3023,9 @@ button {
 }
 
 .printer-setting-panel {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 12px;
   margin-bottom: 12px;
 }
@@ -3271,8 +3339,9 @@ button {
   width: min(1180px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -3426,8 +3495,9 @@ button {
   height: 100%;
   max-height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -3443,8 +3513,9 @@ button {
 }
 
 .purchase-register-toolbar {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
   display: grid;
   grid-template-columns: 120px 1fr 90px 240px;
@@ -3474,8 +3545,9 @@ button {
 }
 
 .purchase-register-summary div {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 9px 10px;
   display: flex;
   justify-content: space-between;
@@ -3515,8 +3587,9 @@ button {
   width: min(1180px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -3533,8 +3606,9 @@ button {
 }
 
 .account-wise-sp-toolbar {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
   display: grid;
   grid-template-columns: 210px 120px 110px 1fr 90px;
@@ -3610,8 +3684,9 @@ button {
   height: 100%;
   max-height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -3821,8 +3896,9 @@ button {
   height: 100%;
   max-height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -3838,8 +3914,9 @@ button {
 }
 
 .cash-book-toolbar {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
   display: grid;
   grid-template-columns: 150px 150px 90px 90px;
@@ -4047,8 +4124,9 @@ button {
   width: min(980px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -4065,8 +4143,9 @@ button {
 }
 
 .firm-master-panel {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 12px;
   margin-bottom: 12px;
   flex-shrink: 0;
@@ -4555,8 +4634,9 @@ button {
   width: min(980px, 100%);
   height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   max-height: 100%;
   display: flex;
   flex-direction: column;
@@ -4702,8 +4782,9 @@ button {
   height: 100%;
   max-height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -4720,8 +4801,9 @@ button {
 }
 
 .approval-panel {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
   flex-shrink: 0;
 }
@@ -4787,8 +4869,9 @@ button {
 }
 
 .approval-list-panel {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -4872,8 +4955,9 @@ button {
   width: min(760px, 100%);
   max-height: 85vh;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -4942,8 +5026,9 @@ button {
   height: 100%;
   max-height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -4959,8 +5044,9 @@ button {
 }
 
 .gst-report-toolbar {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -5101,8 +5187,9 @@ button {
   height: 100%;
   max-height: 100%;
   background: var(--color-bg-panel);
-  border: 1px solid #7c9bab;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -5118,8 +5205,9 @@ button {
 }
 
 .fine-report-toolbar {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -5382,8 +5470,9 @@ button {
 }
 
 .outstanding-section {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 10px;
 }
 
@@ -5530,7 +5619,7 @@ button {
 
 /* WhatsApp */
 .whatsapp-balance-preview {
-  background: #f4f7f8;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
   padding: 8px 10px;
   font-size: 13px;
@@ -5565,8 +5654,9 @@ button {
 }
 
 .settings-tile {
-  background: white;
+  background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   padding: 16px 14px;
   display: flex;
   flex-direction: column;
