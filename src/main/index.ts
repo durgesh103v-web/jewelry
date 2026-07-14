@@ -42,8 +42,8 @@ function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 1366,
     height: 768,
-    minWidth: 1200,
-    minHeight: 700,
+    minWidth: 1100,
+    minHeight: 650,
     show: false,
     autoHideMenuBar: true,
     title: 'Jewellery ERP',

@@ -1,3 +1,46 @@
+:root {
+  /* Color tokens */
+  --color-primary: #0d4f7a;
+  --color-primary-dark: #0e5f86;
+  --color-bg-app: #2f4356;
+  --color-bg-panel: #f2f6f8;
+  --color-border: #c7d2da;
+  --color-border-input: #bfcbd3;
+  --color-white: #ffffff;
+  --color-text: #111827;
+  --color-text-muted: #52606d;
+  --color-success: #047857;
+  --color-success-bg: #e8fff0;
+  --color-success-border: #7bd99c;
+  --color-danger: #b91c1c;
+  --color-danger-bg: #fff0f0;
+  --color-danger-border: #ff9c9c;
+  --color-warning: #805600;
+  --color-warning-bg: #fff8db;
+  --color-warning-border: #e6c85f;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 6px;
+  --space-3: 8px;
+  --space-4: 10px;
+  --space-5: 12px;
+  --space-6: 14px;
+  --space-7: 18px;
+
+  /* Shell sizing */
+  --topbar-height: 34px;
+  --bottomtabs-height: 32px;
+  --radius-sm: 3px;
+  --shadow-window: 0 6px 18px rgba(0, 0, 0, 0.25);
+
+  /* Window width tokens (screens cap at these but shrink to fit smaller viewports) */
+  --window-xs: 720px;
+  --window-sm: 820px;
+  --window-md: 980px;
+  --window-lg: 1180px;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -12,7 +55,7 @@ body,
 
 body {
   font-family: Arial, Helvetica, sans-serif;
-  background: #2f4356;
+  background: var(--color-bg-app);
   color: #111;
   overflow: hidden;
   user-select: none;
@@ -31,27 +74,14 @@ button {
 .app {
   width: 100vw;
   height: 100vh;
-  min-width: 1200px;
-  min-height: 700px;
-  background: #2f4356;
+  min-width: 1100px;
+  min-height: 650px;
+  background: var(--color-bg-app);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-.title-strip {
-  height: 26px;
-  min-height: 26px;
-  background: #f7f7f7;
-  border-bottom: 1px solid #c8c8c8;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  font-size: 13px;
-  color: #111;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
 
 .top-bar {
   height: 34px;
@@ -174,73 +204,220 @@ button {
   flex: 1;
   position: relative;
   padding: 8px;
-  background: #2f4356;
+  background: var(--color-bg-app);
+  overflow: auto;
+}
+
+/* ============================= */
+/* Dashboard / Home screen        */
+/* ============================= */
+
+.dashboard {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  overflow: auto;
+}
+
+.dashboard-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(150px, 1fr));
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.kpi-card {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.kpi-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.kpi-value {
+  font-size: 19px;
+  color: var(--color-text);
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi-sub {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.kpi-sale {
+  border-left-color: #d97706;
+}
+
+.kpi-purchase {
+  border-left-color: #7c3aed;
+}
+
+.kpi-cash {
+  border-left-color: var(--color-success);
+}
+
+.kpi-receivable {
+  border-left-color: #1d4ed8;
+}
+
+.kpi-payable {
+  border-left-color: var(--color-danger);
+}
+
+.kpi-reminder {
+  border-left-color: #c2410c;
+}
+
+.dashboard-main-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: var(--space-4);
+  overflow: hidden;
+}
+
+.dashboard-quick-actions,
+.dashboard-side-panel > section {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.dashboard-quick-actions {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  overflow: auto;
+}
+
+.dashboard-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .quick-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 6px;
   flex-wrap: nowrap;
-  min-width: 1050px;
 }
 
 .search-btn {
-  height: 36px;
+  height: 34px;
   background: #f6a21a;
   color: white;
   border: none;
-  padding: 0 18px;
+  padding: 0 16px;
   font-weight: 700;
   cursor: pointer;
   flex-shrink: 0;
+  border-radius: var(--radius-sm);
 }
 
 .search-input {
-  width: 420px;
-  height: 36px;
-  border: 1px solid #cfcfcf;
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  border: 1px solid var(--color-border-input);
   background: white;
-  font-size: 16px;
+  font-size: 14px;
   padding: 0 10px;
-  flex-shrink: 0;
+}
+
+.dashboard-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+  gap: var(--space-3);
+}
+
+.dashboard-tile-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: var(--space-6);
+  font-size: 13px;
 }
 
 .tile {
-  width: 105px;
-  height: 95px;
-  border: 2px solid #1d2d3c;
+  width: 100%;
+  height: 88px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
   font-size: 14px;
-  flex-shrink: 0;
+}
+
+.tile:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 3px 10px rgba(13, 79, 122, 0.18);
 }
 
 .tile span {
-  height: 38px;
-  font-size: 34px;
-  line-height: 38px;
+  height: 30px;
+  font-size: 26px;
+  line-height: 30px;
 }
 
 .tile strong {
-  font-size: 15px;
-}
-
-.tile small {
   font-size: 13px;
 }
 
 .sale-tile {
-  background: #fcb538;
+  background: #fef3d9;
 }
 
 .purchase-tile {
-  background: #eee0ff;
+  background: #f1e7ff;
+}
+
+.receipt-tile {
+  background: #e2f7ea;
+}
+
+.payment-tile {
+  background: #ffe6e0;
+}
+
+.account-tile {
+  background: #e2edff;
+}
+
+.item-tile {
+  background: #fde6f2;
+}
+
+.report-tile {
+  background: #e2f6f8;
 }
 
 .backup-tile {
@@ -251,44 +428,129 @@ button {
   background: #edf4ff;
 }
 
-.logo-card {
-  position: absolute;
-  top: 36%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 230px;
-  height: 200px;
-  background: #fffaf0;
+.dashboard-side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 0;
+  overflow: auto;
+}
+
+.dashboard-brand-card {
+  padding: var(--space-6) var(--space-4);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e5d7b7;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .logo-icon {
-  font-size: 42px;
-  line-height: 46px;
+  font-size: 36px;
+  line-height: 40px;
 }
 
-.logo-card h1 {
-  margin: 8px 0 2px;
+.dashboard-brand-card h1 {
+  margin: 6px 0 2px;
   letter-spacing: 4px;
-  font-size: 26px;
+  font-size: 20px;
+  color: var(--color-primary);
 }
 
-.logo-card p {
+.dashboard-brand-card p {
   margin: 0;
-  color: #8a6c2f;
-  letter-spacing: 2px;
+  color: var(--color-text-muted);
+  letter-spacing: 1.5px;
+  font-size: 11px;
+}
+
+.dashboard-reminders-card {
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  overflow: hidden;
+}
+
+.dashboard-view-all-btn {
+  border: none;
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.dashboard-empty-text {
+  margin: 0;
+  color: var(--color-text-muted);
   font-size: 12px;
+}
+
+.dashboard-reminder-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: auto;
+}
+
+.dashboard-reminder-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-panel);
+}
+
+.dashboard-reminder-row.overdue {
+  border-left-color: var(--color-danger);
+  background: var(--color-danger-bg);
+}
+
+.dashboard-reminder-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.dashboard-reminder-meta {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 1300px) {
+  .dashboard-kpi-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .dashboard-main-grid {
+    grid-template-columns: 1fr 260px;
+  }
+}
+
+@media (max-width: 1150px) {
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
+    grid-auto-rows: min-content;
+    overflow: auto;
+  }
 }
 
 .bottom-tabs {
   height: 32px;
   min-height: 32px;
-  background: #0e5f86;
+  background: var(--color-primary-dark);
   display: flex;
   align-items: center;
   padding-left: 8px;
@@ -310,7 +572,7 @@ button {
 }
 
 .module-window {
-  width: 720px;
+  width: min(720px, 100%);
   min-height: 320px;
   background: #f4f7f8;
   border: 1px solid #7c9bab;
@@ -319,7 +581,7 @@ button {
 
 .module-title-bar {
   height: 32px;
-  background: #0d4f7a;
+  background: var(--color-primary);
   color: white;
   display: flex;
   align-items: center;
@@ -387,16 +649,16 @@ button {
 }
 
 .account-group-window {
-  width: 920px;
+  width: min(920px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
 
 .form-title-bar {
   height: 32px;
-  background: #0d4f7a;
+  background: var(--color-primary);
   color: white;
   display: flex;
   align-items: center;
@@ -412,7 +674,7 @@ button {
 
 .form-panel {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 14px;
   margin-bottom: 14px;
 }
@@ -433,7 +695,7 @@ button {
 .form-row input,
 .form-row select {
   height: 30px;
-  border: 1px solid #bfcbd3;
+  border: 1px solid var(--color-border-input);
   padding: 0 8px;
   font-size: 14px;
   background: white;
@@ -469,7 +731,7 @@ button {
 
 .table-panel {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   flex: 1;
   min-height: 160px;
   overflow: auto;
@@ -485,7 +747,7 @@ button {
   background: #1e5a7a;
   color: white;
   height: 30px;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   font-weight: 600;
 }
 
@@ -593,7 +855,7 @@ button {
 }
 
 .confirm-dialog {
-  width: 420px;
+  width: min(420px, 100%);
   background: #ffffff;
   border: 1px solid #aebdca;
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
@@ -689,7 +951,7 @@ button {
 }
 
 .confirm-ok-info {
-  background: #0d77aa;
+  background: var(--color-primary);
 }
 
 .confirm-actions button:disabled {
@@ -698,7 +960,7 @@ button {
 }
 .list-toolbar {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   border-bottom: none;
   padding: 8px 10px;
   display: flex;
@@ -720,7 +982,7 @@ button {
 .list-search input {
   width: 330px;
   height: 28px;
-  border: 1px solid #bfcbd3;
+  border: 1px solid var(--color-border-input);
   padding: 0 8px;
   font-size: 14px;
 }
@@ -757,7 +1019,7 @@ button {
 .status-inactive {
   background: #f1f5f9;
   color: #64748b;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border);
   padding: 2px 8px;
   font-weight: 700;
   font-size: 12px;
@@ -765,7 +1027,7 @@ button {
 
 .screen-help-text {
   background: #eef6fb;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   border-top: none;
   padding: 7px 10px;
   font-size: 12px;
@@ -778,9 +1040,9 @@ button {
 }
 
 .account-master-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
@@ -791,15 +1053,15 @@ button {
 
 .account-master-form-panel {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 14px;
   margin-bottom: 14px;
 }
 
 .section-title {
   background: #e9f3f9;
-  border: 1px solid #c7d2da;
-  color: #0d4f7a;
+  border: 1px solid var(--color-border);
+  color: var(--color-primary);
   font-weight: 700;
   font-size: 14px;
   padding: 7px 10px;
@@ -834,7 +1096,7 @@ button {
 .form-field input,
 .form-field select {
   height: 30px;
-  border: 1px solid #bfcbd3;
+  border: 1px solid var(--color-border-input);
   padding: 0 8px;
   font-size: 14px;
   background: white;
@@ -968,9 +1230,9 @@ button {
 }
 
 .item-group-window {
-  width: 920px;
+  width: min(920px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -995,9 +1257,9 @@ button {
 }
 
 .item-stamp-window {
-  width: 920px;
+  width: min(920px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -1022,9 +1284,9 @@ button {
 }
 
 .item-design-window {
-  width: 920px;
+  width: min(920px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -1049,9 +1311,9 @@ button {
 }
 
 .item-master-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -1071,7 +1333,7 @@ button {
 
 .item-master-form-panel {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 12px;
   margin-bottom: 12px;
   flex-shrink: 0;
@@ -1106,9 +1368,9 @@ button {
 }
 
 .item-opening-stock-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -1128,7 +1390,7 @@ button {
 
 .opening-stock-form-panel {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 12px;
   margin-bottom: 12px;
   flex-shrink: 0;
@@ -1186,9 +1448,9 @@ button {
 }
 
 .sale-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -1225,7 +1487,7 @@ button {
 
 .sale-panel {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   margin-bottom: 10px;
   flex-shrink: 0;
@@ -1233,13 +1495,13 @@ button {
 
 .sale-header-grid {
   display: grid;
-  grid-template-columns: 115px 140px 1fr 150px 120px 120px 90px;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 8px;
 }
 
 .sale-item-entry-grid {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
   gap: 7px;
   align-items: end;
 }
@@ -1271,7 +1533,7 @@ button {
   gap: 8px;
   flex-shrink: 0;
   background: #eef6fb;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   border-top: none;
   padding: 0 10px;
 }
@@ -1288,18 +1550,18 @@ button {
   min-height: 0;
   overflow: auto;
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
 }
 
 .balance-box {
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   margin-bottom: 10px;
   background: #f8fbfd;
 }
 
 .balance-title {
-  background: #0d4f7a;
+  background: var(--color-primary);
   color: white;
   font-weight: 700;
   font-size: 13px;
@@ -1329,7 +1591,7 @@ button {
 .sale-narration {
   width: 100%;
   height: 70px;
-  border: 1px solid #bfcbd3;
+  border: 1px solid var(--color-border-input);
   padding: 8px;
   resize: none;
   font-family: inherit;
@@ -1337,21 +1599,17 @@ button {
 
 @media (max-width: 1300px) {
   .sale-window {
-    width: 1160px;
+    width: min(1160px, 100%);
   }
 
   .sale-content {
     grid-template-columns: 1fr 230px;
   }
-
-  .sale-item-entry-grid {
-    grid-template-columns: 1.3fr 60px 80px 80px 80px 70px 80px 65px 65px 70px 75px 70px 70px 70px;
-  }
 }
 
 .sale-payment-panel {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 8px;
   margin-top: 8px;
   flex-shrink: 0;
@@ -1359,7 +1617,7 @@ button {
 
 .sale-payment-entry-grid {
   display: grid;
-  grid-template-columns: 110px 75px 65px 65px 75px 75px 75px 75px 75px 1fr 100px;
+  grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
   gap: 6px;
   align-items: end;
 }
@@ -1400,7 +1658,7 @@ button {
 }
 
 .print-preview-window {
-  width: 980px;
+  width: min(980px, 100%);
   max-height: 94vh;
   background: #e9eef3;
   border: 1px solid #6b8798;
@@ -1411,7 +1669,7 @@ button {
 
 .print-preview-toolbar {
   height: 42px;
-  background: #0d4f7a;
+  background: var(--color-primary);
   color: white;
   padding: 0 12px;
   display: flex;
@@ -1517,7 +1775,7 @@ button {
   display: flex;
   justify-content: space-between;
   padding: 5px 7px;
-  border-bottom: 1px solid #d1d5db;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .sale-print-balance-line:last-child {
@@ -1704,9 +1962,9 @@ button {
 }
 
 .sale-register-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -1726,7 +1984,7 @@ button {
 
 .sale-register-toolbar {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   display: flex;
   align-items: center;
@@ -1757,7 +2015,7 @@ button {
 
 .sale-register-summary div {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 9px 10px;
   display: flex;
   justify-content: space-between;
@@ -1804,9 +2062,9 @@ button {
 }
 
 .account-balance-report-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -1826,7 +2084,7 @@ button {
 
 .account-balance-toolbar {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   display: flex;
   align-items: center;
@@ -1857,7 +2115,7 @@ button {
 
 .account-balance-summary div {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 9px 10px;
   display: flex;
   justify-content: space-between;
@@ -1894,9 +2152,9 @@ button {
 }
 
 .accountwise-details-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -1916,7 +2174,7 @@ button {
 
 .accountwise-details-toolbar {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   display: grid;
   grid-template-columns: 330px 1fr 90px 90px;
@@ -1935,12 +2193,12 @@ button {
 }
 
 .party-statement-toolbar {
-  grid-template-columns: 260px 130px 130px 1fr 90px 90px;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
 }
 
 .accountwise-details-print-title {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   margin-bottom: 10px;
   text-align: center;
@@ -1969,7 +2227,7 @@ button {
 
 .accountwise-account-card div {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 8px 10px;
   display: flex;
   justify-content: space-between;
@@ -1998,14 +2256,14 @@ button {
 
 .accountwise-balance-box {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   display: grid;
   grid-template-columns: 120px repeat(5, 1fr);
   align-items: center;
 }
 
 .accountwise-balance-title {
-  background: #0d4f7a;
+  background: var(--color-primary);
   color: white;
   font-weight: 800;
   padding: 8px;
@@ -2120,9 +2378,9 @@ button {
 }
 
 .item-stock-report-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -2142,7 +2400,7 @@ button {
 
 .item-stock-toolbar {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   display: grid;
   grid-template-columns: 130px 1fr 90px 90px 230px;
@@ -2162,7 +2420,7 @@ button {
 
 .item-stock-print-title {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   margin-bottom: 10px;
   text-align: center;
@@ -2191,7 +2449,7 @@ button {
 
 .item-stock-summary div {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 9px 10px;
   display: flex;
   justify-content: space-between;
@@ -2268,9 +2526,9 @@ button {
 }
 
 .item-transaction-report-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -2290,7 +2548,7 @@ button {
 
 .item-transaction-toolbar {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   display: grid;
   grid-template-columns: 120px 150px 1fr 90px;
@@ -2317,7 +2575,7 @@ button {
 
 .item-transaction-summary div {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 9px 10px;
   display: flex;
   justify-content: space-between;
@@ -2363,9 +2621,9 @@ button {
 }
 
 .barcode-printing-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -2385,7 +2643,7 @@ button {
 
 .barcode-printing-toolbar {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   display: flex;
   flex-wrap: wrap;
@@ -2480,9 +2738,9 @@ button {
 }
 
 .backup-restore-window {
-  width: 900px;
+  width: min(900px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -2509,7 +2767,7 @@ button {
 
 .backup-card {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 18px;
   display: flex;
   gap: 14px;
@@ -2520,13 +2778,13 @@ button {
   width: 52px;
   height: 52px;
   background: #eef6fb;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 15px;
   font-weight: 800;
-  color: #0d4f7a;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
@@ -2601,7 +2859,7 @@ button {
 
 .backup-help-panel {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 14px;
 }
 
@@ -2663,9 +2921,9 @@ button {
 }
 
 .printer-setting-window {
-  width: 1040px;
+  width: min(1040px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -2699,7 +2957,7 @@ button {
 
 .printer-setting-panel {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 12px;
   margin-bottom: 12px;
 }
@@ -2718,7 +2976,7 @@ button {
 
 .printer-option-row {
   background: #f8fbfd;
-  border: 1px solid #d6e0e7;
+  border: 1px solid var(--color-border);
   padding: 8px 10px;
   display: flex;
   align-items: center;
@@ -2740,7 +2998,7 @@ button {
 
 .printer-setting-preview {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 12px;
   overflow: auto;
 }
@@ -2806,7 +3064,7 @@ button {
   display: flex;
   justify-content: space-between;
   gap: 6px;
-  border-bottom: 1px solid #d1d5db;
+  border-bottom: 1px solid var(--color-border);
   padding-bottom: 5px;
   margin-bottom: 6px;
 }
@@ -3010,9 +3268,9 @@ button {
 }
 
 .purchase-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -3047,27 +3305,27 @@ button {
 
 .purchase-panel {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   margin-bottom: 10px;
 }
 
 .purchase-header-grid {
   display: grid;
-  grid-template-columns: 110px 130px 1fr 130px 100px 120px 120px 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 8px;
 }
 
 .purchase-item-grid {
   display: grid;
-  grid-template-columns: 1.3fr 110px 110px 70px 90px 80px 80px 80px 80px 70px 70px 70px 80px 80px 80px 80px;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: 7px;
   align-items: end;
 }
 
 .purchase-payment-grid {
   display: grid;
-  grid-template-columns: 130px 80px 70px 70px 80px 80px 80px 80px 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
   gap: 7px;
   align-items: end;
 }
@@ -3093,7 +3351,7 @@ button {
 .purchase-balance-card,
 .purchase-action-card {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   margin-bottom: 10px;
 }
@@ -3117,7 +3375,7 @@ button {
   justify-content: space-between;
   gap: 8px;
   padding: 5px 0;
-  border-bottom: 1px dashed #d7e0e8;
+  border-bottom: 1px dashed var(--color-border);
   font-size: 12px;
 }
 
@@ -3136,7 +3394,7 @@ button {
 
 .purchase-balance-divider {
   height: 1px;
-  background: #cbd5e1;
+  background: var(--color-border);
   margin: 8px 0;
 }
 
@@ -3164,10 +3422,10 @@ button {
 }
 
 .purchase-register-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
   max-height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   display: flex;
@@ -3186,7 +3444,7 @@ button {
 
 .purchase-register-toolbar {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   display: grid;
   grid-template-columns: 120px 1fr 90px 240px;
@@ -3217,7 +3475,7 @@ button {
 
 .purchase-register-summary div {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 9px 10px;
   display: flex;
   justify-content: space-between;
@@ -3254,9 +3512,9 @@ button {
 }
 
 .account-wise-sp-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -3276,7 +3534,7 @@ button {
 
 .account-wise-sp-toolbar {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   display: grid;
   grid-template-columns: 210px 120px 110px 1fr 90px;
@@ -3311,7 +3569,7 @@ button {
 
 .account-wise-sp-summary div {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 9px 10px;
   display: flex;
   justify-content: space-between;
@@ -3348,10 +3606,10 @@ button {
 }
 
 .cash-voucher-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
   max-height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   display: flex;
@@ -3381,7 +3639,7 @@ button {
 .cash-voucher-list-panel {
   min-height: 0;
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -3397,7 +3655,7 @@ button {
 
 .voucher-type-toggle button {
   height: 54px;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   background: #f8fbfd;
   color: #334155;
   cursor: pointer;
@@ -3432,7 +3690,7 @@ button {
 
 .cash-voucher-no-box {
   background: #eef6fb;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 9px 10px;
   margin-bottom: 10px;
   display: flex;
@@ -3500,7 +3758,7 @@ button {
 
 .cash-voucher-summary div {
   background: #f8fbfd;
-  border: 1px solid #d6e0e7;
+  border: 1px solid var(--color-border);
   padding: 9px 10px;
   display: flex;
   justify-content: space-between;
@@ -3559,10 +3817,10 @@ button {
 }
 
 .cash-book-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
   max-height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   display: flex;
@@ -3581,7 +3839,7 @@ button {
 
 .cash-book-toolbar {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   display: grid;
   grid-template-columns: 150px 150px 90px 90px;
@@ -3600,12 +3858,12 @@ button {
 }
 
 .payment-receipt-toolbar {
-  grid-template-columns: 130px 130px 150px 1fr 90px 90px;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
 }
 
 .cash-book-print-title {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   margin-bottom: 10px;
   text-align: center;
@@ -3634,7 +3892,7 @@ button {
 
 .cash-book-summary div {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 9px 10px;
   display: flex;
   justify-content: space-between;
@@ -3676,7 +3934,7 @@ button {
 }
 
 .cash-book-summary .closing strong {
-  color: #0d4f7a;
+  color: var(--color-primary);
 }
 
 .cash-book-table-panel {
@@ -3734,7 +3992,6 @@ button {
 @media print {
   .no-print,
   .top-bar,
-  .title-strip,
   .bottom-tabs {
     display: none !important;
   }
@@ -3787,9 +4044,9 @@ button {
 }
 
 .firm-master-window {
-  width: 980px;
+  width: min(980px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -3809,7 +4066,7 @@ button {
 
 .firm-master-panel {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 12px;
   margin-bottom: 12px;
   flex-shrink: 0;
@@ -3830,7 +4087,7 @@ button {
 .firm-terms-field textarea {
   width: 100%;
   height: 62px;
-  border: 1px solid #bfcbd3;
+  border: 1px solid var(--color-border-input);
   padding: 7px 8px;
   font-family: inherit;
   resize: none;
@@ -3839,12 +4096,12 @@ button {
 
 .firm-address-field textarea:focus,
 .firm-terms-field textarea:focus {
-  border-color: #0d4f7a;
+  border-color: var(--color-primary);
 }
 
 .firm-preview-card {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 14px;
   text-align: center;
   margin-bottom: 12px;
@@ -3887,12 +4144,12 @@ button {
 }
 
 .account-master-modern-window {
-  width: 1180px;
+  width: min(1180px, 100%);
 }
 
 .account-master-top-actions {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 8px;
   display: flex;
   gap: 8px;
@@ -3917,7 +4174,7 @@ button {
 }
 
 .account-action-btn {
-  background: #0f75a8;
+  background: var(--color-primary);
   color: #ffffff;
 }
 
@@ -3948,7 +4205,7 @@ button {
 
 .account-master-summary-row div {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 9px 10px;
   display: flex;
   justify-content: space-between;
@@ -3981,7 +4238,7 @@ button {
 
 .account-master-form-header {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 12px;
   margin-bottom: 10px;
   display: flex;
@@ -4009,7 +4266,7 @@ button {
 
 .account-section-card {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 12px;
   margin-bottom: 10px;
 }
@@ -4038,14 +4295,14 @@ button {
   width: 100%;
   height: 60px;
   resize: none;
-  border: 1px solid #bfcbd3;
+  border: 1px solid var(--color-border-input);
   padding: 7px 8px;
   font-family: inherit;
   outline: none;
 }
 
 .account-address-field textarea:focus {
-  border-color: #0d4f7a;
+  border-color: var(--color-primary);
 }
 
 .account-notification-field {
@@ -4108,7 +4365,7 @@ button {
 }
 
 .item-opening-stock-client-window {
-  width: 1180px;
+  width: min(1180px, 100%);
 }
 
 .item-opening-stock-client-body {
@@ -4117,7 +4374,7 @@ button {
 
 .opening-entry-panel {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   margin-bottom: 8px;
   flex-shrink: 0;
@@ -4135,7 +4392,7 @@ button {
 }
 
 .opening-entry-grid.second-row {
-  grid-template-columns: 60px 80px 80px 80px 80px 80px 70px 90px 80px 80px 75px 85px;
+  grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
 }
 
 .opening-extra-grid {
@@ -4162,7 +4419,7 @@ button {
 }
 
 .opening-add-btn {
-  background: #0f75a8;
+  background: var(--color-primary);
 }
 
 .opening-remove-btn {
@@ -4193,7 +4450,7 @@ button {
 
 .opening-summary-card {
   background: #ffffff;
-  border: 1px solid #d7e0e8;
+  border: 1px solid var(--color-border);
   padding: 8px 10px;
   display: flex;
   gap: 18px;
@@ -4202,7 +4459,7 @@ button {
 
 .opening-summary-card h4 {
   margin: 0;
-  color: #0f75a8;
+  color: var(--color-primary);
   font-style: italic;
   min-width: 55px;
 }
@@ -4231,7 +4488,7 @@ button {
 
 .opening-saved-panel {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   flex: 1;
   min-height: 0;
@@ -4267,7 +4524,7 @@ button {
 .sale-item-summary-row div,
 .purchase-item-summary-row div {
   background: #ffffff;
-  border: 1px solid #d7e0e8;
+  border: 1px solid var(--color-border);
   padding: 8px 10px;
   display: flex;
   justify-content: space-between;
@@ -4295,9 +4552,9 @@ button {
 }
 
 .cash-fine-opening-window {
-  width: 980px;
+  width: min(980px, 100%);
   height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   max-height: 100%;
@@ -4317,7 +4574,7 @@ button {
 
 .cash-fine-entry-panel {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   margin-bottom: 8px;
   flex-shrink: 0;
@@ -4325,7 +4582,7 @@ button {
 
 .cash-fine-entry-grid {
   display: grid;
-  grid-template-columns: 120px 130px 1fr 90px 90px 90px 100px 85px 95px;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
   gap: 8px;
   align-items: end;
 }
@@ -4340,7 +4597,7 @@ button {
 }
 
 .cash-fine-add-btn {
-  background: #0f75a8;
+  background: var(--color-primary);
 }
 
 .cash-fine-remove-btn {
@@ -4373,7 +4630,7 @@ button {
 
 .cash-fine-summary-box {
   background: #ffffff;
-  border: 1px solid #d7e0e8;
+  border: 1px solid var(--color-border);
   padding: 8px;
 }
 
@@ -4404,7 +4661,7 @@ button {
 
 .cash-fine-total-row div {
   background: #ffffff;
-  border: 1px solid #d7e0e8;
+  border: 1px solid var(--color-border);
   padding: 8px 10px;
   display: flex;
   justify-content: space-between;
@@ -4441,10 +4698,10 @@ button {
 }
 
 .approval-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
   max-height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   display: flex;
@@ -4464,14 +4721,14 @@ button {
 
 .approval-panel {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   flex-shrink: 0;
 }
 
 .approval-header-grid {
   display: grid;
-  grid-template-columns: 115px 140px 1fr 150px 130px 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 8px;
 }
 
@@ -4517,7 +4774,7 @@ button {
   gap: 8px;
   flex-shrink: 0;
   background: #eef6fb;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 0 10px;
 }
 
@@ -4531,7 +4788,7 @@ button {
 
 .approval-list-panel {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -4612,9 +4869,9 @@ button {
 }
 
 .approval-detail-dialog {
-  width: 760px;
+  width: min(760px, 100%);
   max-height: 85vh;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
   display: flex;
@@ -4623,6 +4880,8 @@ button {
 }
 
 .approval-detail-body {
+  flex: 1;
+  min-height: 0;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -4638,7 +4897,7 @@ button {
 
 .approval-detail-meta div {
   background: #ffffff;
-  border: 1px solid #d7e0e8;
+  border: 1px solid var(--color-border);
   padding: 8px 10px;
   display: flex;
   flex-direction: column;
@@ -4679,10 +4938,10 @@ button {
 }
 
 .gst-report-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
   max-height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   display: flex;
@@ -4701,10 +4960,10 @@ button {
 
 .gst-report-toolbar {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   display: grid;
-  grid-template-columns: 130px 130px 100px 1fr 90px 90px 220px;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 10px;
   align-items: end;
   flex-shrink: 0;
@@ -4721,7 +4980,7 @@ button {
 
 .gst-report-print-title {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   margin-bottom: 10px;
   text-align: center;
@@ -4750,7 +5009,7 @@ button {
 
 .gst-report-summary div {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 9px 10px;
   display: flex;
   justify-content: space-between;
@@ -4838,10 +5097,10 @@ button {
 }
 
 .fine-report-window {
-  width: 1180px;
+  width: min(1180px, 100%);
   height: 100%;
   max-height: 100%;
-  background: #f2f6f8;
+  background: var(--color-bg-panel);
   border: 1px solid #7c9bab;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   display: flex;
@@ -4860,10 +5119,10 @@ button {
 
 .fine-report-toolbar {
   background: white;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   display: grid;
-  grid-template-columns: 130px 130px 100px 1fr 90px 90px 220px;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 10px;
   align-items: end;
   flex-shrink: 0;
@@ -4880,7 +5139,7 @@ button {
 
 .fine-report-print-title {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
   margin-bottom: 10px;
   text-align: center;
@@ -4909,7 +5168,7 @@ button {
 
 .fine-report-summary div {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 9px 10px;
   display: flex;
   justify-content: space-between;
@@ -5037,7 +5296,7 @@ button {
 
 .daily-summary-section {
   background: #ffffff;
-  border: 1px solid #c7d2da;
+  border: 1px solid var(--color-border);
   padding: 10px;
 }
 
@@ -5063,7 +5322,7 @@ button {
 
 .daily-summary-box-grid div {
   background: #f7fafc;
-  border: 1px solid #d7e0e8;
+  border: 1px solid var(--color-border);
   padding: 8px 10px;
   display: flex;
   justify-content: space-between;
@@ -5085,256 +5344,4 @@ button {
   color: #1a7f37;
 }
 
-.daily-summary-box-grid .nave strong {
-  color: #b42318;
-}
-
-.daily-summary-box-grid .closing strong {
-  color: #0b4a6f;
-}
-
-@media print {
-  .daily-summary-sections {
-    overflow: visible !important;
-  }
-
-  .daily-summary-section,
-  .daily-summary-box-grid div {
-    border-color: #000 !important;
-    break-inside: avoid;
-  }
-}
-
-.outstanding-report-screen .fine-report-window {
-  width: 1240px;
-}
-
-.outstanding-toolbar {
-  grid-template-columns: 1fr 90px 90px 220px;
-}
-
-.outstanding-sections {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.outstanding-section {
-  background: white;
-  border: 1px solid #c7d2da;
-  padding: 10px;
-}
-
-.outstanding-section h4 {
-  margin: 0 0 8px;
-  color: #0b4a6f;
-  font-size: 14px;
-}
-
-.outstanding-section-count {
-  color: #52606d;
-  font-weight: 400;
-}
-
-.outstanding-totals-grid {
-  margin-bottom: 10px;
-}
-
-.outstanding-table-panel {
-  max-height: 320px;
-  overflow: auto;
-}
-
-@media print {
-  .outstanding-sections {
-    overflow: visible !important;
-  }
-
-  .outstanding-section {
-    border-color: #000 !important;
-    break-inside: avoid;
-  }
-
-  .outstanding-table-panel {
-    max-height: none !important;
-    overflow: visible !important;
-  }
-}
-
-.job-work-header-grid {
-  grid-template-columns: 115px 140px 1fr 130px 1fr 130px 130px 1fr;
-}
-
-.job-work-narration-field {
-  grid-column: span 2;
-}
-
-.job-work-receipt-grid {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-}
-
-.job-work-receive-dialog {
-  width: 900px;
-}
-
-.approval-badge.partial_received {
-  background: #eaf1ff;
-  border-color: #7ea8e6;
-  color: #1f3f8a;
-}
-
-.approval-badge.received {
-  background: #e8fff0;
-  border-color: #7bd99c;
-  color: #146c2e;
-}
-
-.approval-badge.cancelled {
-  background: #fde8e8;
-  border-color: #ef9c9c;
-  color: #8a1f1f;
-}
-
-.approval-badge.completed {
-  background: #eaf1ff;
-  border-color: #7ea8e6;
-  color: #1f3f8a;
-}
-
-.approval-badge.delivered {
-  background: #e8fff0;
-  border-color: #7bd99c;
-  color: #146c2e;
-}
-
-.repair-entry-header-grid {
-  grid-template-columns: 115px 140px 1fr 130px 130px 1fr 1fr 130px 1fr;
-}
-
-.repair-entry-narration-field {
-  grid-column: span 2;
-}
-
-.repair-entry-complete-dialog {
-  width: 520px;
-}
-
-/* Delete Sale Bills */
-.restricted-usage-note {
-  background: #fff0f0;
-  border: 1px solid #f0a8a8;
-  color: #7a1f1f;
-  padding: 10px 12px;
-  font-size: 13px;
-  line-height: 1.5;
-  margin-bottom: 10px;
-  flex-shrink: 0;
-}
-
-.void-reason-dialog {
-  width: 480px;
-}
-
-.void-reason-field {
-  margin-top: 14px;
-  text-align: left;
-}
-
-.void-reason-field label {
-  display: block;
-  font-size: 13px;
-  font-weight: 700;
-  margin-bottom: 6px;
-  color: #111827;
-}
-
-.void-reason-field textarea {
-  width: 100%;
-  resize: vertical;
-  border: 1px solid #c7d2da;
-  padding: 8px;
-  font-size: 13px;
-  font-family: inherit;
-}
-
-.required-mark {
-  color: #c51616;
-}
-
-/* Reminder */
-.overdue-count {
-  color: #c51616;
-}
-
-/* WhatsApp */
-.whatsapp-balance-preview {
-  background: #f4f7f8;
-  border: 1px solid #c7d2da;
-  padding: 8px 10px;
-  font-size: 13px;
-  color: #33475b;
-}
-
-.whatsapp-screen textarea,
-.screenshot-screen textarea {
-  width: 100%;
-  resize: vertical;
-  border: 1px solid #c7d2da;
-  padding: 8px;
-  font-size: 14px;
-  font-family: inherit;
-}
-
-/* Settings hub */
-.settings-window {
-  width: 820px;
-}
-
-.settings-intro {
-  margin: 0 0 14px;
-  font-size: 14px;
-  color: #33475b;
-}
-
-.settings-hub-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-}
-
-.settings-tile {
-  background: white;
-  border: 1px solid #c7d2da;
-  padding: 16px 14px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  cursor: pointer;
-  text-align: left;
-  transition: box-shadow 0.15s ease, border-color 0.15s ease;
-}
-
-.settings-tile:hover {
-  border-color: #0d4f7a;
-  box-shadow: 0 4px 12px rgba(13, 79, 122, 0.18);
-}
-
-.settings-tile-icon {
-  font-size: 28px;
-  line-height: 1;
-}
-
-.settings-tile strong {
-  font-size: 15px;
-  color: #0d4f7a;
-}
-
-.settings-tile small {
-  font-size: 12px;
-  color: #52606d;
-  line-height: 1.4;
-}
+.daily-summary-b
