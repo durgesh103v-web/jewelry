@@ -585,7 +585,7 @@ textarea:focus {
 }
 
 .module-window {
-  width: min(720px, 100%);
+  width: 100%;
   min-height: 320px;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -664,7 +664,7 @@ textarea:focus {
 }
 
 .account-group-window {
-  width: min(920px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -1074,7 +1074,7 @@ textarea:focus {
 }
 
 .account-master-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -1269,7 +1269,7 @@ textarea:focus {
 }
 
 .item-group-window {
-  width: min(920px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -1297,7 +1297,7 @@ textarea:focus {
 }
 
 .item-stamp-window {
-  width: min(920px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -1325,7 +1325,7 @@ textarea:focus {
 }
 
 .item-design-window {
-  width: min(920px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -1353,7 +1353,7 @@ textarea:focus {
 }
 
 .item-master-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -1412,7 +1412,7 @@ textarea:focus {
 }
 
 .item-opening-stock-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -1494,7 +1494,7 @@ textarea:focus {
 }
 
 .sale-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -2013,7 +2013,7 @@ textarea:focus {
 }
 
 .sale-register-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -2115,7 +2115,7 @@ textarea:focus {
 }
 
 .account-balance-report-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -2207,7 +2207,7 @@ textarea:focus {
 }
 
 .accountwise-details-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -2436,7 +2436,7 @@ textarea:focus {
 }
 
 .item-stock-report-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -2586,7 +2586,7 @@ textarea:focus {
 }
 
 .item-transaction-report-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -2683,7 +2683,7 @@ textarea:focus {
 }
 
 .barcode-printing-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -2803,7 +2803,7 @@ textarea:focus {
 }
 
 .backup-restore-window {
-  width: min(900px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -2987,7 +2987,7 @@ textarea:focus {
 }
 
 .printer-setting-window {
-  width: min(1040px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -3336,7 +3336,7 @@ textarea:focus {
 }
 
 .purchase-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -3491,7 +3491,7 @@ textarea:focus {
 }
 
 .purchase-register-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   max-height: 100%;
   background: var(--color-bg-panel);
@@ -3584,7 +3584,7 @@ textarea:focus {
 }
 
 .account-wise-sp-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -3680,7 +3680,7 @@ textarea:focus {
 }
 
 .cash-voucher-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   max-height: 100%;
   background: var(--color-bg-panel);
@@ -3892,7 +3892,7 @@ textarea:focus {
 }
 
 .cash-book-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   max-height: 100%;
   background: var(--color-bg-panel);
@@ -4121,7 +4121,7 @@ textarea:focus {
 }
 
 .firm-master-window {
-  width: min(980px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -4223,7 +4223,7 @@ textarea:focus {
 }
 
 .account-master-modern-window {
-  width: min(1180px, 100%);
+  width: 100%;
 }
 
 .account-master-top-actions {
@@ -4444,7 +4444,7 @@ textarea:focus {
 }
 
 .item-opening-stock-client-window {
-  width: min(1180px, 100%);
+  width: 100%;
 }
 
 .item-opening-stock-client-body {
@@ -4631,7 +4631,7 @@ textarea:focus {
 }
 
 .cash-fine-opening-window {
-  width: min(980px, 100%);
+  width: 100%;
   height: 100%;
   background: var(--color-bg-panel);
   border: 1px solid var(--color-border);
@@ -4778,7 +4778,7 @@ textarea:focus {
 }
 
 .approval-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   max-height: 100%;
   background: var(--color-bg-panel);
@@ -5022,7 +5022,7 @@ textarea:focus {
 }
 
 .gst-report-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   max-height: 100%;
   background: var(--color-bg-panel);
@@ -5183,7 +5183,7 @@ textarea:focus {
 }
 
 .fine-report-window {
-  width: min(1180px, 100%);
+  width: 100%;
   height: 100%;
   max-height: 100%;
   background: var(--color-bg-panel);
@@ -5638,7 +5638,7 @@ textarea:focus {
 
 /* Settings hub */
 .settings-window {
-  width: min(820px, 100%);
+  width: 100%;
 }
 
 .settings-intro {
