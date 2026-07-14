@@ -2269,7 +2269,10 @@ const api = {
 
     list: (): Promise<ScreenshotListRecord[]> => ipcRenderer.invoke('screenshot:list'),
 
-    openFolder: (): Promise<{ success: boolean }> => ipcRenderer.invoke('screenshot:openFolder')
+    openFolder: (): Promise<{ success: boolean }> => ipcRenderer.invoke('screenshot:openFolder'),
+
+    getImage: (fileName: string): Promise<string> =>
+      ipcRenderer.invoke('screenshot:getImage', fileName)
   }
 }
 

@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import dayjs from 'dayjs'
-import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'fs'
-import { join } from 'path'
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'fs'
+import { basename, join } from 'path'
 
 // Mirrors the convention used by getDatabasePath() in database/connection.ts:
 // a dedicated sub-folder under Electron's per-user application data directory.
@@ -61,5 +61,26 @@ export function registerScreenshotIpc(): void {
     void shell.openPath(dir)
 
     return { success: true }
+  })
+
+  ipcMain.handle('screenshot:getImage', (_event, fileName: string) => {
+    // Strip any directory components so a crafted fileName can't escape the
+    // screenshots folder (path traversal), then require it to actually live there.
+    const safeName = basename(String(fileName || ''))
+
+    if (!safeName.toLowerCase().endsWith('.png')) {
+      throw new Error('Invalid screenshot file name')
+    }
+
+    const dir = getScreenshotsDir()
+    const filePath = join(dir, safeName)
+
+    if (!existsSync(filePath)) {
+      throw new Error('Screenshot file not found')
+    }
+
+    const buffer = readFileSync(filePath)
+
+    return `data:image/png;base64,${buffer.toString('base64')}`
   })
 }

@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import { appMenus } from './config/appMenus'
+import AppAlert from './components/ui/AppAlert'
+import { getFriendlyErrorMessage } from './utils/getFriendlyErrorMessage'
 import AccountGroupScreen from './modules/master/account-group/AccountGroupScreen'
 import AccountMasterScreen from './modules/master/account-master/AccountMasterScreen'
 import ItemGroupScreen from './modules/master/item-group/ItemGroupScreen'
@@ -84,6 +86,12 @@ function App(): React.JSX.Element {
   const [activeTabId, setActiveTabId] = useState('dashboard')
   const [topFirmName, setTopFirmName] = useState('Demo')
   const [lastBackupLabel, setLastBackupLabel] = useState('-')
+  const [capturingScreenshot, setCapturingScreenshot] = useState(false)
+  const [screenshotToast, setScreenshotToast] = useState<{
+    type: 'success' | 'error'
+    message: string
+  } | null>(null)
+  const screenshotToastTimerRef = useRef<number | null>(null)
 
   const activeTab = tabs.find((tab) => tab.id === activeTabId) ?? dashboardTab
 
@@ -167,6 +175,38 @@ function App(): React.JSX.Element {
     })
   }
 
+  const showScreenshotToast = useCallback((type: 'success' | 'error', message: string): void => {
+    setScreenshotToast({ type, message })
+
+    if (screenshotToastTimerRef.current) {
+      window.clearTimeout(screenshotToastTimerRef.current)
+    }
+
+    screenshotToastTimerRef.current = window.setTimeout(() => {
+      setScreenshotToast(null)
+    }, 3500)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (screenshotToastTimerRef.current) {
+        window.clearTimeout(screenshotToastTimerRef.current)
+      }
+    }
+  }, [])
+
+  const handleQuickScreenshot = async (): Promise<void> => {
+    try {
+      setCapturingScreenshot(true)
+      const result = await window.api.screenshot.capture()
+      showScreenshotToast('success', `Screenshot saved: ${result.fileName}`)
+    } catch (error) {
+      showScreenshotToast('error', getFriendlyErrorMessage(error))
+    } finally {
+      setCapturingScreenshot(false)
+    }
+  }
+
   return (
     <div className="app">
       <div className="top-bar">
@@ -221,11 +261,14 @@ function App(): React.JSX.Element {
             Last Backup {lastBackupLabel}
           </button>
           <button
-            className="screen-btn"
+            className="header-icon-btn"
             type="button"
-            onClick={() => openQuickScreen('screenshot', 'Screen Shot', 'utility')}
+            title="Take a screenshot of the current screen"
+            aria-label="Take a screenshot of the current screen"
+            onClick={() => void handleQuickScreenshot()}
+            disabled={capturingScreenshot}
           >
-            &#128247; Screen Shot
+            {capturingScreenshot ? '⏳' : '\u{1F4F7}'}
           </button>
           <button
             className="whatsapp-btn"
@@ -236,6 +279,16 @@ function App(): React.JSX.Element {
           </button>
         </div>
       </div>
+
+      {screenshotToast && (
+        <div className="header-toast">
+          <AppAlert
+            type={screenshotToast.type}
+            message={screenshotToast.message}
+            onClose={() => setScreenshotToast(null)}
+          />
+        </div>
+      )}
 
       <main className="workspace">
         {activeTab.id === 'dashboard' ? (

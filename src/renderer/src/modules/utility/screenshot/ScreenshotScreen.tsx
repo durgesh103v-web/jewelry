@@ -7,10 +7,13 @@ type AlertType = 'success' | 'error' | 'warning'
 function ScreenshotScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
   const [screenshots, setScreenshots] = useState<ScreenshotListRecord[]>([])
   const [loading, setLoading] = useState(false)
-  const [capturing, setCapturing] = useState(false)
 
   const [alertMessage, setAlertMessage] = useState('')
   const [alertType, setAlertType] = useState<AlertType>('success')
+
+  const [previewShot, setPreviewShot] = useState<ScreenshotListRecord | null>(null)
+  const [previewImage, setPreviewImage] = useState('')
+  const [previewLoading, setPreviewLoading] = useState(false)
 
   const alertTimerRef = useRef<number | null>(null)
 
@@ -53,25 +56,33 @@ function ScreenshotScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
     }
   }, [loadScreenshots])
 
-  const handleCapture = async (): Promise<void> => {
-    try {
-      setCapturing(true)
-      const result = await window.api.screenshot.capture()
-      await loadScreenshots()
-      showAlert('success', `Screenshot saved: ${result.fileName}`)
-    } catch (error) {
-      showAlert('error', getFriendlyErrorMessage(error))
-    } finally {
-      setCapturing(false)
-    }
-  }
-
   const handleOpenFolder = async (): Promise<void> => {
     try {
       await window.api.screenshot.openFolder()
     } catch (error) {
       showAlert('error', getFriendlyErrorMessage(error))
     }
+  }
+
+  const handleView = async (shot: ScreenshotListRecord): Promise<void> => {
+    setPreviewShot(shot)
+    setPreviewImage('')
+    setPreviewLoading(true)
+
+    try {
+      const dataUrl = await window.api.screenshot.getImage(shot.fileName)
+      setPreviewImage(dataUrl)
+    } catch (error) {
+      showAlert('error', getFriendlyErrorMessage(error))
+      setPreviewShot(null)
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  const closePreview = (): void => {
+    setPreviewShot(null)
+    setPreviewImage('')
   }
 
   return (
@@ -88,58 +99,56 @@ function ScreenshotScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
         <div className="account-group-body">
           <AppAlert type={alertType} message={alertMessage} onClose={() => setAlertMessage('')} />
 
-          <div className="button-row">
-            <button
-              className="btn-save"
-              type="button"
-              onClick={() => void handleCapture()}
-              disabled={capturing}
-            >
-              {capturing ? 'Capturing...' : 'Take Screenshot'}
-            </button>
+          <div className="screenshot-summary-row">
+            <div className="screenshot-summary-card">
+              <span>Total Screenshots</span>
+              <strong>{screenshots.length}</strong>
+            </div>
 
-            <button className="btn-new" type="button" onClick={() => void handleOpenFolder()}>
-              Open Folder
-            </button>
+            <div className="screenshot-hint-card">
+              &#128247; Use the camera icon in the top header to capture the screen you&apos;re
+              currently on — no need to open this page first.
+            </div>
 
-            <button
-              className="btn-new"
-              type="button"
-              onClick={() => void loadScreenshots()}
-              disabled={loading}
-            >
-              Refresh
-            </button>
-          </div>
+            <div className="screenshot-toolbar-actions">
+              <button className="btn-new" type="button" onClick={() => void handleOpenFolder()}>
+                Open Folder
+              </button>
 
-          <div className="list-toolbar">
-            <div className="record-summary">
-              Total Screenshots: <strong>{screenshots.length}</strong>
+              <button
+                className="btn-new"
+                type="button"
+                onClick={() => void loadScreenshots()}
+                disabled={loading}
+              >
+                {loading ? 'Refreshing...' : 'Refresh'}
+              </button>
             </div>
           </div>
 
-          <div className="table-panel">
+          <div className="table-panel screenshot-table-panel">
             <table>
               <thead>
                 <tr>
                   <th>Sr No</th>
                   <th>File Name</th>
                   <th>Captured At</th>
+                  <th className="screenshot-action-col">Action</th>
                 </tr>
               </thead>
 
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={3} className="empty-row">
+                    <td colSpan={4} className="empty-row">
                       Loading screenshots...
                     </td>
                   </tr>
                 ) : screenshots.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="empty-row">
-                      No screenshots taken yet. Click &quot;Take Screenshot&quot; to capture the
-                      current app window.
+                    <td colSpan={4} className="empty-row">
+                      No screenshots yet. Click the &#128247; icon in the top header from any
+                      screen to capture one.
                     </td>
                   </tr>
                 ) : (
@@ -148,6 +157,17 @@ function ScreenshotScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
                       <td>{index + 1}</td>
                       <td>{shot.fileName}</td>
                       <td>{shot.capturedAt}</td>
+                      <td className="screenshot-action-col">
+                        <button
+                          className="screenshot-view-btn"
+                          type="button"
+                          title="View screenshot"
+                          aria-label={`View ${shot.fileName}`}
+                          onClick={() => void handleView(shot)}
+                        >
+                          &#128065;
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -161,6 +181,33 @@ function ScreenshotScreen({ onClose }: { onClose: () => void }): React.JSX.Eleme
           </div>
         </div>
       </div>
+
+      {previewShot && (
+        <div className="screenshot-preview-overlay" onClick={closePreview}>
+          <div className="screenshot-preview-dialog" onClick={(event) => event.stopPropagation()}>
+            <div className="screenshot-preview-toolbar">
+              <div className="screenshot-preview-meta">
+                <strong>{previewShot.fileName}</strong>
+                <span>{previewShot.capturedAt}</span>
+              </div>
+
+              <button className="module-close-btn" type="button" onClick={closePreview}>
+                &times;
+              </button>
+            </div>
+
+            <div className="screenshot-preview-body">
+              {previewLoading ? (
+                <div className="screenshot-preview-loading">Loading preview...</div>
+              ) : previewImage ? (
+                <img src={previewImage} alt={previewShot.fileName} />
+              ) : (
+                <div className="screenshot-preview-loading">Unable to load preview.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

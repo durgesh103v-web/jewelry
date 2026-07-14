@@ -2098,6 +2098,7 @@ interface Window {
       capture: () => Promise<ScreenshotCaptureResult>
       list: () => Promise<ScreenshotListRecord[]>
       openFolder: () => Promise<{ success: boolean }>
+      getImage: (fileName: string) => Promise<string>
     }
   }
 }
