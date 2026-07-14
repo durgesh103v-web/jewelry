@@ -521,9 +521,24 @@ export const saleService = {
     return this.getById(saleId)
   },
 
-  cancel(id: string) {
+  // Void/cancel a sale bill. This is the single reversal path used both by the
+  // quick "Cancel" action on Sale Register and by the restricted "Delete Sale
+  // Bills" utility screen (the latter always passes a mandatory reason).
+  //
+  // Reversal approach (matches the existing convention already used here and
+  // in saleReturnService.delete()): sale_headers.deleted_at is the canonical
+  // "excluded from active data" flag - every list()/getById()/report query in
+  // this codebase already filters WHERE deleted_at IS NULL, so soft-deleting
+  // the header automatically drops it out of Sale Register, GST reports etc.
+  // The stock_ledger and account_ledger rows created by create() (source_type
+  // 'SALE' / 'SALE_PAYMENT', source_id = sale id) are hard-deleted so Stock
+  // Report and Account Balance/Outstanding totals net back to exactly what
+  // they were before the sale existed - equivalent to posting an opposite
+  // compensating entry, but without leaving stray offsetting rows behind.
+  cancel(id: string, reason?: string) {
     const db = getDatabase()
     const now = dayjs().format('YYYY-MM-DD HH:mm:ss')
+    const trimmedReason = (reason ?? '').trim()
 
     const sale = db
       .prepare(
@@ -546,11 +561,20 @@ export const saleService = {
         UPDATE sale_headers
         SET
           deleted_at = ?,
+          voided_at = ?,
+          void_reason = ?,
           updated_at = ?,
           narration = TRIM(COALESCE(narration, '') || ?)
         WHERE id = ?
       `
-      ).run(now, now, ` Cancelled on ${now}`, id)
+      ).run(
+        now,
+        now,
+        trimmedReason,
+        now,
+        trimmedReason ? ` Voided on ${now}: ${trimmedReason}` : ` Cancelled on ${now}`,
+        id
+      )
 
       db.prepare(
         `
@@ -577,6 +601,40 @@ export const saleService = {
     }
   },
 
+  // Used by the Delete Sale Bills utility screen, which needs to show both
+  // active and already-voided bills (for audit/history) - unlike list(),
+  // which only returns active bills for Sale Register.
+  listAllForDelete() {
+    const db = getDatabase()
+
+    return db
+      .prepare(
+        `
+        SELECT
+          sh.id,
+          sh.sale_no,
+          sh.sale_date,
+          sh.account_id AS accountId,
+          sh.metal_type,
+          sh.item_fine_total,
+          sh.item_majuri_total,
+          sh.closing_gold_fine,
+          sh.closing_silver_fine,
+          sh.closing_cash,
+          sh.narration,
+          sh.voided_at,
+          sh.void_reason,
+          CASE WHEN sh.deleted_at IS NULL THEN 'ACTIVE' ELSE 'VOIDED' END AS status,
+          a.account_name,
+          a.mobile_number
+        FROM sale_headers sh
+        INNER JOIN accounts a ON a.id = sh.account_id
+        ORDER BY sh.sale_date DESC, sh.created_at DESC
+      `
+      )
+      .all()
+  },
+
   list() {
     const db = getDatabase()
 
@@ -587,6 +645,7 @@ export const saleService = {
           sh.id,
           sh.sale_no,
           sh.sale_date,
+          sh.account_id AS accountId,
           sh.metal_type,
           sh.item_fine_total,
           sh.item_majuri_total,

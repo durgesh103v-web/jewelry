@@ -549,6 +549,510 @@ function runMigrations(database: Database.Database): void {
   addColumnIfMissing(database, 'items', 'default_wastage', 'REAL NOT NULL DEFAULT 0')
   addColumnIfMissing(database, 'items', 'default_labour_rate', 'REAL NOT NULL DEFAULT 0')
   addColumnIfMissing(database, 'items', 'labour_rate_type', "TEXT NOT NULL DEFAULT 'Kg'")
+  addColumnIfMissing(database, 'items', 'barcode_value', 'TEXT')
+
+  database.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_items_barcode_value_not_null
+    ON items(barcode_value)
+    WHERE barcode_value IS NOT NULL;
+  `)
+  addColumnIfMissing(database, 'sale_headers', 'bill_type', "TEXT NOT NULL DEFAULT 'WHOLESALE'")
+  addColumnIfMissing(database, 'sale_headers', 'taxable_amount', 'REAL NOT NULL DEFAULT 0')
+  addColumnIfMissing(database, 'sale_headers', 'cgst_amount', 'REAL NOT NULL DEFAULT 0')
+  addColumnIfMissing(database, 'sale_headers', 'sgst_amount', 'REAL NOT NULL DEFAULT 0')
+  addColumnIfMissing(database, 'sale_headers', 'igst_amount', 'REAL NOT NULL DEFAULT 0')
+  addColumnIfMissing(database, 'purchase_headers', 'bill_type', "TEXT NOT NULL DEFAULT 'WHOLESALE'")
+  addColumnIfMissing(database, 'purchase_headers', 'taxable_amount', 'REAL NOT NULL DEFAULT 0')
+  addColumnIfMissing(database, 'purchase_headers', 'cgst_amount', 'REAL NOT NULL DEFAULT 0')
+  addColumnIfMissing(database, 'purchase_headers', 'sgst_amount', 'REAL NOT NULL DEFAULT 0')
+  addColumnIfMissing(database, 'purchase_headers', 'igst_amount', 'REAL NOT NULL DEFAULT 0')
+
+  // Delete Sale Bills utility: sale_headers already uses deleted_at as the
+  // canonical "voided/excluded from active reports" flag (see saleService.cancel).
+  // These two columns only add audit detail (when + why) on top of that flag.
+  addColumnIfMissing(database, 'sale_headers', 'voided_at', 'TEXT')
+  addColumnIfMissing(database, 'sale_headers', 'void_reason', "TEXT NOT NULL DEFAULT ''")
+
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS transfers (
+      id TEXT PRIMARY KEY,
+      transfer_no TEXT NOT NULL UNIQUE,
+      transfer_date TEXT NOT NULL,
+      from_account_id TEXT NOT NULL,
+      to_account_id TEXT NOT NULL,
+      metal_type TEXT NOT NULL DEFAULT '',
+      gold_fine REAL NOT NULL DEFAULT 0,
+      silver_fine REAL NOT NULL DEFAULT 0,
+      cash REAL NOT NULL DEFAULT 0,
+      bank REAL NOT NULL DEFAULT 0,
+      anamat REAL NOT NULL DEFAULT 0,
+      narration TEXT DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT,
+      FOREIGN KEY (from_account_id) REFERENCES accounts(id),
+      FOREIGN KEY (to_account_id) REFERENCES accounts(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS settlements (
+      id TEXT PRIMARY KEY,
+      settlement_no TEXT NOT NULL UNIQUE,
+      settlement_date TEXT NOT NULL,
+      account_id TEXT NOT NULL,
+      metal_type TEXT NOT NULL DEFAULT 'Gold',
+      gold_fine REAL NOT NULL DEFAULT 0,
+      silver_fine REAL NOT NULL DEFAULT 0,
+      cash REAL NOT NULL DEFAULT 0,
+      bank REAL NOT NULL DEFAULT 0,
+      anamat REAL NOT NULL DEFAULT 0,
+      narration TEXT DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT,
+      FOREIGN KEY (account_id) REFERENCES accounts(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS sauda_entries (
+      id TEXT PRIMARY KEY,
+      sauda_no TEXT NOT NULL UNIQUE,
+      sauda_date TEXT NOT NULL,
+      account_id TEXT NOT NULL,
+      metal_type TEXT NOT NULL DEFAULT 'Gold',
+      transaction_type TEXT NOT NULL DEFAULT 'BUY',
+      fine REAL NOT NULL DEFAULT 0,
+      rate REAL NOT NULL DEFAULT 0,
+      amount REAL NOT NULL DEFAULT 0,
+      delivery_date TEXT DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'OPEN',
+      narration TEXT DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT,
+      FOREIGN KEY (account_id) REFERENCES accounts(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS order_payal (
+      id TEXT PRIMARY KEY,
+      order_no TEXT NOT NULL UNIQUE,
+      order_date TEXT NOT NULL,
+      account_id TEXT NOT NULL,
+      item_id TEXT NOT NULL,
+      pcs REAL NOT NULL DEFAULT 0,
+      weight REAL NOT NULL DEFAULT 0,
+      delivery_date TEXT DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'PENDING',
+      narration TEXT DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT,
+      FOREIGN KEY (account_id) REFERENCES accounts(id),
+      FOREIGN KEY (item_id) REFERENCES items(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS estimate_headers (
+      id TEXT PRIMARY KEY,
+      estimate_no TEXT NOT NULL UNIQUE,
+      estimate_date TEXT NOT NULL,
+      account_id TEXT NOT NULL,
+      phone TEXT DEFAULT '',
+      metal_type TEXT NOT NULL,
+      narration TEXT DEFAULT '',
+      valid_until TEXT DEFAULT '',
+      item_fine_total REAL NOT NULL DEFAULT 0,
+      item_majuri_total REAL NOT NULL DEFAULT 0,
+      taxable_amount REAL NOT NULL DEFAULT 0,
+      cgst_amount REAL NOT NULL DEFAULT 0,
+      sgst_amount REAL NOT NULL DEFAULT 0,
+      igst_amount REAL NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'OPEN',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT,
+      FOREIGN KEY (account_id) REFERENCES accounts(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS estimate_item_lines (
+      id TEXT PRIMARY KEY,
+      estimate_id TEXT NOT NULL,
+      line_no INTEGER NOT NULL,
+      item_id TEXT NOT NULL,
+      stamp_id TEXT,
+      design_id TEXT,
+      item_name_snapshot TEXT NOT NULL,
+      barcode TEXT DEFAULT '',
+      remark TEXT DEFAULT '',
+      pcs REAL NOT NULL DEFAULT 0,
+      gross_weight REAL NOT NULL DEFAULT 0,
+      net_weight REAL NOT NULL DEFAULT 0,
+      tunch REAL NOT NULL DEFAULT 0,
+      wastage REAL NOT NULL DEFAULT 0,
+      fine REAL NOT NULL DEFAULT 0,
+      majuri REAL NOT NULL DEFAULT 0,
+      hsn_code TEXT DEFAULT '',
+      gst_rate REAL NOT NULL DEFAULT 0,
+      taxable_amount REAL NOT NULL DEFAULT 0,
+      cgst_amount REAL NOT NULL DEFAULT 0,
+      sgst_amount REAL NOT NULL DEFAULT 0,
+      igst_amount REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (estimate_id) REFERENCES estimate_headers(id),
+      FOREIGN KEY (item_id) REFERENCES items(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      username TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL DEFAULT '',
+      full_name TEXT DEFAULT '',
+      role TEXT NOT NULL DEFAULT 'USER',
+      active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS weight_scan_logs (
+      id TEXT PRIMARY KEY,
+      scan_date TEXT NOT NULL,
+      barcode TEXT DEFAULT '',
+      item_id TEXT,
+      gross_weight REAL NOT NULL DEFAULT 0,
+      net_weight REAL NOT NULL DEFAULT 0,
+      fine REAL NOT NULL DEFAULT 0,
+      narration TEXT DEFAULT '',
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (item_id) REFERENCES items(id)
+    );
+  `)
+
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS approval_headers (
+      id TEXT PRIMARY KEY,
+      approval_no TEXT NOT NULL UNIQUE,
+      approval_date TEXT NOT NULL,
+      account_id TEXT NOT NULL,
+      phone TEXT DEFAULT '',
+      metal_type TEXT NOT NULL,
+      narration TEXT DEFAULT '',
+      reminder_date TEXT DEFAULT '',
+      item_fine_total REAL NOT NULL DEFAULT 0,
+      item_majuri_total REAL NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'approved', 'returned', 'partial_return')),
+      converted_sale_id TEXT,
+      converted_at TEXT,
+      returned_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT,
+      FOREIGN KEY (account_id) REFERENCES accounts(id),
+      FOREIGN KEY (converted_sale_id) REFERENCES sale_headers(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS approval_item_lines (
+      id TEXT PRIMARY KEY,
+      approval_id TEXT NOT NULL,
+      line_no INTEGER NOT NULL,
+      item_id TEXT NOT NULL,
+      stamp_id TEXT,
+      design_id TEXT,
+      item_name_snapshot TEXT NOT NULL,
+      barcode TEXT DEFAULT '',
+      remark TEXT DEFAULT '',
+      pcs REAL NOT NULL DEFAULT 0,
+      gross_weight REAL NOT NULL DEFAULT 0,
+      pack_weight REAL NOT NULL DEFAULT 0,
+      less_weight REAL NOT NULL DEFAULT 0,
+      add_weight REAL NOT NULL DEFAULT 0,
+      net_weight REAL NOT NULL DEFAULT 0,
+      tunch REAL NOT NULL DEFAULT 0,
+      wastage REAL NOT NULL DEFAULT 0,
+      hishob REAL NOT NULL DEFAULT 0,
+      unit TEXT DEFAULT 'GM',
+      labour_rate REAL NOT NULL DEFAULT 0,
+      labour_rate_type TEXT NOT NULL DEFAULT 'Kg',
+      fine REAL NOT NULL DEFAULT 0,
+      majuri REAL NOT NULL DEFAULT 0,
+      return_status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (return_status IN ('pending', 'returned')),
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (approval_id) REFERENCES approval_headers(id),
+      FOREIGN KEY (item_id) REFERENCES items(id),
+      FOREIGN KEY (stamp_id) REFERENCES item_stamps(id),
+      FOREIGN KEY (design_id) REFERENCES item_designs(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_approval_headers_account
+    ON approval_headers(account_id);
+
+    CREATE INDEX IF NOT EXISTS idx_approval_headers_date
+    ON approval_headers(approval_date);
+
+    CREATE INDEX IF NOT EXISTS idx_approval_headers_status
+    ON approval_headers(status);
+
+    CREATE INDEX IF NOT EXISTS idx_approval_item_lines_approval
+    ON approval_item_lines(approval_id);
+  `)
+
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS purchase_return_headers (
+      id TEXT PRIMARY KEY,
+      return_no TEXT NOT NULL UNIQUE,
+      return_date TEXT NOT NULL,
+      account_id TEXT NOT NULL,
+      phone TEXT DEFAULT '',
+      metal_type TEXT NOT NULL,
+      against_purchase_id TEXT,
+      narration TEXT DEFAULT '',
+      old_gold_fine REAL NOT NULL DEFAULT 0,
+      old_silver_fine REAL NOT NULL DEFAULT 0,
+      old_cash REAL NOT NULL DEFAULT 0,
+      old_anamat REAL NOT NULL DEFAULT 0,
+      old_bank REAL NOT NULL DEFAULT 0,
+      item_fine_total REAL NOT NULL DEFAULT 0,
+      item_majuri_total REAL NOT NULL DEFAULT 0,
+      closing_gold_fine REAL NOT NULL DEFAULT 0,
+      closing_silver_fine REAL NOT NULL DEFAULT 0,
+      closing_cash REAL NOT NULL DEFAULT 0,
+      closing_anamat REAL NOT NULL DEFAULT 0,
+      closing_bank REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT,
+      FOREIGN KEY (account_id) REFERENCES accounts(id),
+      FOREIGN KEY (against_purchase_id) REFERENCES purchase_headers(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS purchase_return_item_lines (
+      id TEXT PRIMARY KEY,
+      purchase_return_id TEXT NOT NULL,
+      line_no INTEGER NOT NULL,
+      line_type TEXT NOT NULL DEFAULT 'NAVE',
+      item_id TEXT NOT NULL,
+      stamp_id TEXT,
+      design_id TEXT,
+      item_name_snapshot TEXT NOT NULL,
+      barcode TEXT DEFAULT '',
+      remark TEXT DEFAULT '',
+      pcs REAL NOT NULL DEFAULT 0,
+      gross_weight REAL NOT NULL DEFAULT 0,
+      pack_weight REAL NOT NULL DEFAULT 0,
+      less_weight REAL NOT NULL DEFAULT 0,
+      add_weight REAL NOT NULL DEFAULT 0,
+      net_weight REAL NOT NULL DEFAULT 0,
+      tunch REAL NOT NULL DEFAULT 0,
+      wastage REAL NOT NULL DEFAULT 0,
+      hishob REAL NOT NULL DEFAULT 0,
+      unit TEXT DEFAULT 'GM',
+      labour_rate REAL NOT NULL DEFAULT 0,
+      labour_rate_type TEXT NOT NULL DEFAULT 'Kg',
+      fine REAL NOT NULL DEFAULT 0,
+      majuri REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (purchase_return_id) REFERENCES purchase_return_headers(id),
+      FOREIGN KEY (item_id) REFERENCES items(id),
+      FOREIGN KEY (stamp_id) REFERENCES item_stamps(id),
+      FOREIGN KEY (design_id) REFERENCES item_designs(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_purchase_return_headers_account
+    ON purchase_return_headers(account_id);
+
+    CREATE INDEX IF NOT EXISTS idx_purchase_return_headers_date
+    ON purchase_return_headers(return_date);
+
+    CREATE INDEX IF NOT EXISTS idx_purchase_return_headers_against_purchase
+    ON purchase_return_headers(against_purchase_id);
+
+    CREATE INDEX IF NOT EXISTS idx_purchase_return_item_lines_return
+    ON purchase_return_item_lines(purchase_return_id);
+  `)
+
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS sale_return_headers (
+      id TEXT PRIMARY KEY,
+      return_no TEXT NOT NULL UNIQUE,
+      return_date TEXT NOT NULL,
+      account_id TEXT NOT NULL,
+      phone TEXT DEFAULT '',
+      metal_type TEXT NOT NULL,
+      against_sale_id TEXT,
+      narration TEXT DEFAULT '',
+      old_gold_fine REAL NOT NULL DEFAULT 0,
+      old_silver_fine REAL NOT NULL DEFAULT 0,
+      old_cash REAL NOT NULL DEFAULT 0,
+      old_anamat REAL NOT NULL DEFAULT 0,
+      old_bank REAL NOT NULL DEFAULT 0,
+      item_fine_total REAL NOT NULL DEFAULT 0,
+      item_majuri_total REAL NOT NULL DEFAULT 0,
+      closing_gold_fine REAL NOT NULL DEFAULT 0,
+      closing_silver_fine REAL NOT NULL DEFAULT 0,
+      closing_cash REAL NOT NULL DEFAULT 0,
+      closing_anamat REAL NOT NULL DEFAULT 0,
+      closing_bank REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT,
+      FOREIGN KEY (account_id) REFERENCES accounts(id),
+      FOREIGN KEY (against_sale_id) REFERENCES sale_headers(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS sale_return_item_lines (
+      id TEXT PRIMARY KEY,
+      sale_return_id TEXT NOT NULL,
+      line_no INTEGER NOT NULL,
+      line_type TEXT NOT NULL DEFAULT 'JAMA',
+      item_id TEXT NOT NULL,
+      stamp_id TEXT,
+      design_id TEXT,
+      item_name_snapshot TEXT NOT NULL,
+      barcode TEXT DEFAULT '',
+      remark TEXT DEFAULT '',
+      pcs REAL NOT NULL DEFAULT 0,
+      gross_weight REAL NOT NULL DEFAULT 0,
+      pack_weight REAL NOT NULL DEFAULT 0,
+      less_weight REAL NOT NULL DEFAULT 0,
+      add_weight REAL NOT NULL DEFAULT 0,
+      net_weight REAL NOT NULL DEFAULT 0,
+      tunch REAL NOT NULL DEFAULT 0,
+      wastage REAL NOT NULL DEFAULT 0,
+      hishob REAL NOT NULL DEFAULT 0,
+      unit TEXT DEFAULT 'GM',
+      labour_rate REAL NOT NULL DEFAULT 0,
+      labour_rate_type TEXT NOT NULL DEFAULT 'Kg',
+      fine REAL NOT NULL DEFAULT 0,
+      majuri REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (sale_return_id) REFERENCES sale_return_headers(id),
+      FOREIGN KEY (item_id) REFERENCES items(id),
+      FOREIGN KEY (stamp_id) REFERENCES item_stamps(id),
+      FOREIGN KEY (design_id) REFERENCES item_designs(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_sale_return_headers_account
+    ON sale_return_headers(account_id);
+
+    CREATE INDEX IF NOT EXISTS idx_sale_return_headers_date
+    ON sale_return_headers(return_date);
+
+    CREATE INDEX IF NOT EXISTS idx_sale_return_headers_against_sale
+    ON sale_return_headers(against_sale_id);
+
+    CREATE INDEX IF NOT EXISTS idx_sale_return_item_lines_return
+    ON sale_return_item_lines(sale_return_id);
+  `)
+
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS job_work_orders (
+      id TEXT PRIMARY KEY,
+      order_no TEXT NOT NULL UNIQUE,
+      order_date TEXT NOT NULL,
+      karigar_account_id TEXT NOT NULL,
+      metal_type TEXT NOT NULL,
+      item_id TEXT NOT NULL,
+      gross_weight_given REAL NOT NULL DEFAULT 0,
+      net_weight_given REAL NOT NULL DEFAULT 0,
+      narration TEXT DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'partial_received', 'received', 'cancelled')),
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT,
+      FOREIGN KEY (karigar_account_id) REFERENCES accounts(id),
+      FOREIGN KEY (item_id) REFERENCES items(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS job_work_receipt_lines (
+      id TEXT PRIMARY KEY,
+      job_work_order_id TEXT NOT NULL,
+      receipt_date TEXT NOT NULL,
+      pcs REAL NOT NULL DEFAULT 0,
+      gross_weight_received REAL NOT NULL DEFAULT 0,
+      net_weight_received REAL NOT NULL DEFAULT 0,
+      tunch REAL NOT NULL DEFAULT 0,
+      wastage REAL NOT NULL DEFAULT 0,
+      hishob REAL NOT NULL DEFAULT 0,
+      fine_received REAL NOT NULL DEFAULT 0,
+      weight_loss REAL NOT NULL DEFAULT 0,
+      labour_rate REAL NOT NULL DEFAULT 0,
+      labour_rate_type TEXT NOT NULL DEFAULT 'Kg',
+      majuri REAL NOT NULL DEFAULT 0,
+      narration TEXT DEFAULT '',
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (job_work_order_id) REFERENCES job_work_orders(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_job_work_orders_karigar
+    ON job_work_orders(karigar_account_id);
+
+    CREATE INDEX IF NOT EXISTS idx_job_work_orders_item
+    ON job_work_orders(item_id);
+
+    CREATE INDEX IF NOT EXISTS idx_job_work_orders_status
+    ON job_work_orders(status);
+
+    CREATE INDEX IF NOT EXISTS idx_job_work_orders_date
+    ON job_work_orders(order_date);
+
+    CREATE INDEX IF NOT EXISTS idx_job_work_receipt_lines_order
+    ON job_work_receipt_lines(job_work_order_id);
+  `)
+
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS repair_entries (
+      id TEXT PRIMARY KEY,
+      repair_no TEXT NOT NULL UNIQUE,
+      receipt_date TEXT NOT NULL,
+      account_id TEXT NOT NULL,
+      phone TEXT DEFAULT '',
+      item_description TEXT NOT NULL DEFAULT '',
+      metal_type TEXT NOT NULL,
+      approx_weight REAL NOT NULL DEFAULT 0,
+      work_description TEXT DEFAULT '',
+      estimated_charge REAL NOT NULL DEFAULT 0,
+      actual_charge REAL,
+      status TEXT NOT NULL DEFAULT 'received'
+        CHECK (status IN ('received', 'completed', 'delivered', 'cancelled')),
+      completed_date TEXT,
+      delivered_date TEXT,
+      narration TEXT DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      deleted_at TEXT,
+      FOREIGN KEY (account_id) REFERENCES accounts(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_repair_entries_account
+    ON repair_entries(account_id);
+
+    CREATE INDEX IF NOT EXISTS idx_repair_entries_status
+    ON repair_entries(status);
+
+    CREATE INDEX IF NOT EXISTS idx_repair_entries_date
+    ON repair_entries(receipt_date);
+  `)
+
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS financial_years (
+      id TEXT PRIMARY KEY,
+      year_label TEXT NOT NULL UNIQUE,
+      start_date TEXT NOT NULL,
+      end_date TEXT NOT NULL,
+      is_current INTEGER NOT NULL DEFAULT 0,
+      is_closed INTEGER NOT NULL DEFAULT 0,
+      narration TEXT DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_financial_years_current
+    ON financial_years(is_current);
+  `)
 }
 
 export function getDatabasePath(): string {
@@ -577,3 +1081,4 @@ export function getDatabase(): Database.Database {
 
   return db
 }
+

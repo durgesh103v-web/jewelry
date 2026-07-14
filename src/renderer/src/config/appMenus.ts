@@ -21,7 +21,12 @@ export const appMenus: AppMenu[] = [
     label: 'Transaction',
     children: [
       { id: 'sale', label: 'Sale', module: 'transaction' },
+      { id: 'sale-return', label: 'Sale Return', module: 'transaction' },
+      { id: 'approval', label: 'Approval', module: 'transaction' },
       { id: 'purchase', label: 'Purchase', module: 'transaction' },
+      { id: 'purchase-return', label: 'Purchase Return', module: 'transaction' },
+      { id: 'job-work', label: 'Job Work', module: 'transaction' },
+      { id: 'repair-entry', label: 'Repair Entry', module: 'transaction' },
       { id: 'cash-payment-nave', label: 'Cash Payment / Nave', module: 'transaction' },
       { id: 'cash-receipt-jama', label: 'Cash Receipt / Jama', module: 'transaction' },
       { id: 'transfer', label: 'Transfer', module: 'transaction' },
@@ -52,13 +57,16 @@ export const appMenus: AppMenu[] = [
       { id: 'fine-rojmel', label: 'Fine Rojmel', module: 'reports' },
       { id: 'dar-rojmel', label: 'Dar Rojmel', module: 'reports' },
       { id: 'account-balance', label: 'Account Balance', module: 'reports' },
+      { id: 'outstanding', label: 'Outstanding', module: 'reports' },
       { id: 'sale-register', label: 'Sale Register', module: 'reports' },
       { id: 'purchase-register', label: 'Purchase Register', module: 'reports' },
       { id: 'accountwise-summary', label: 'Accountwise Summary', module: 'reports' },
       { id: 'account-wise-sale-purchase', label: 'Account Wise Sale Purchase', module: 'reports' },
       { id: 'accountwise-details', label: 'Accountwise Details', module: 'reports' },
+      { id: 'party-statement', label: 'Party Statement', module: 'reports' },
       { id: 'item-stock', label: 'Item Stock', module: 'reports' },
       { id: 'item-transaction', label: 'Item Transaction', module: 'reports' },
+      { id: 'stock-ledger', label: 'Stock Ledger', module: 'reports' },
       { id: 'itemwise-sale-purchase', label: 'Itemwise Sale Purchase', module: 'reports' },
       {
         id: 'item-sale-purchase-city-wise',
@@ -76,11 +84,13 @@ export const appMenus: AppMenu[] = [
     children: [
       { id: 'backup', label: 'Backup', module: 'utility' },
       { id: 'restore-backup', label: 'Restore Backup', module: 'utility' },
+      { id: 'barcode-printing', label: 'Barcode Printing', module: 'utility' },
       { id: 'reminder', label: 'Reminder', module: 'utility' },
       { id: 'screenshot', label: 'Screen Shot', module: 'utility' },
       { id: 'whatsapp', label: 'WhatsApp', module: 'utility' },
       { id: 'printer-setting', label: 'Printer Setting', module: 'utility' },
       { id: 'user-management', label: 'User Management', module: 'utility' },
+      { id: 'financial-year', label: 'Financial Year', module: 'utility' },
       { id: 'settings', label: 'Settings', module: 'utility' }
     ]
   }

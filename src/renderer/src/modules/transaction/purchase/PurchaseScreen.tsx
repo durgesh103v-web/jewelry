@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import AppAlert from '../../../components/ui/AppAlert'
+import PurchasePrintPreview from './PurchasePrintPreview'
 import { getFriendlyErrorMessage } from '../../../utils/getFriendlyErrorMessage'
 import {
   calculateFine,
@@ -143,6 +144,7 @@ function PurchaseScreen({ onClose }: { onClose: () => void }): React.JSX.Element
 
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [savedPurchase, setSavedPurchase] = useState<SavedPurchaseRecord | null>(null)
   const [alertMessage, setAlertMessage] = useState('')
   const [alertType, setAlertType] = useState<AlertType>('success')
 
@@ -452,7 +454,7 @@ function PurchaseScreen({ onClose }: { onClose: () => void }): React.JSX.Element
     try {
       setSaving(true)
 
-      await window.api.purchases.create({
+      const saved = await window.api.purchases.create({
         purchaseNo,
         purchaseDate,
         accountId,
@@ -492,6 +494,7 @@ function PurchaseScreen({ onClose }: { onClose: () => void }): React.JSX.Element
         }))
       })
 
+      setSavedPurchase(saved)
       showAlert('success', 'Purchase saved successfully.')
       await resetPurchase()
     } catch (error) {
@@ -945,6 +948,14 @@ function PurchaseScreen({ onClose }: { onClose: () => void }): React.JSX.Element
           </div>
         </div>
       </div>
+
+      {savedPurchase && (
+        <PurchasePrintPreview
+          purchase={savedPurchase}
+          autoPrintOnOpen
+          onClose={() => setSavedPurchase(null)}
+        />
+      )}
     </div>
   )
 }

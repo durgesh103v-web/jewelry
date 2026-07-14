@@ -208,7 +208,7 @@ function AccountwiseDetailsReportScreen({ onClose }: { onClose: () => void }): R
   return (
     <div className="accountwise-details-screen">
       <div className="accountwise-details-window">
-        <div className="form-title-bar">
+        <div className="form-title-bar no-print">
           <span>Accountwise Details</span>
 
           <button className="module-close-btn" type="button" onClick={onClose}>
@@ -217,9 +217,15 @@ function AccountwiseDetailsReportScreen({ onClose }: { onClose: () => void }): R
         </div>
 
         <div className="accountwise-details-body">
-          <AppAlert type={alertType} message={alertMessage} onClose={() => setAlertMessage('')} />
+          <div className="no-print">
+            <AppAlert
+              type={alertType}
+              message={alertMessage}
+              onClose={() => setAlertMessage('')}
+            />
+          </div>
 
-          <div className="accountwise-details-toolbar">
+          <div className="accountwise-details-toolbar no-print">
             <div className="form-field">
               <label htmlFor="accountwise-account-select">Account</label>
               <select
@@ -266,6 +272,23 @@ function AccountwiseDetailsReportScreen({ onClose }: { onClose: () => void }): R
             >
               Refresh
             </button>
+
+            <button
+              className="btn-save"
+              type="button"
+              onClick={() => window.print()}
+              disabled={!report}
+            >
+              Print
+            </button>
+          </div>
+
+          <div className="accountwise-details-print-title">
+            <h2>Account Wise Detail Report</h2>
+            <p>
+              Account: {report ? report.account.accountName : 'Not selected'}
+              {searchText ? ` | Search Filter: ${searchText}` : ''}
+            </p>
           </div>
 
           {report && (
@@ -388,7 +411,7 @@ function AccountwiseDetailsReportScreen({ onClose }: { onClose: () => void }): R
             </table>
           </div>
 
-          <div className="screen-help-text">
+          <div className="screen-help-text no-print">
             This report shows ledger movement for selected account. Nave increases balance. Jama
             decreases balance. Cash Payment is Nave and Cash Receipt is Jama.
           </div>

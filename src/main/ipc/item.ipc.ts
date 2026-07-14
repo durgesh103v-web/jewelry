@@ -17,4 +17,12 @@ export function registerItemIpc(): void {
   ipcMain.handle('items:delete', (_event, id: string) => {
     return itemService.delete(id)
   })
+
+  ipcMain.handle('items:assignBarcode', (_event, id: string) => {
+    return itemService.assignBarcode(id)
+  })
+
+  ipcMain.handle('items:regenerateBarcode', (_event, id: string) => {
+    return itemService.regenerateBarcode(id)
+  })
 }

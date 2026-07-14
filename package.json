@@ -25,6 +25,7 @@
     "@electron-toolkit/utils": "^4.0.0",
     "better-sqlite3": "^12.11.1",
     "dayjs": "^1.11.21",
+    "jsbarcode": "^3.12.3",
     "uuid": "^14.0.1",
     "zod": "^4.4.3"
   },

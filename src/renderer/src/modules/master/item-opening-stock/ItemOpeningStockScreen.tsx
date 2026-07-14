@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import AppAlert from '../../../components/ui/AppAlert'
 import AppConfirmDialog from '../../../components/ui/AppConfirmDialog'
+import ItemOpeningStockPrintPreview from './ItemOpeningStockPrintPreview'
 import { getFriendlyErrorMessage } from '../../../utils/getFriendlyErrorMessage'
 import {
   calculateFine,
@@ -165,6 +166,9 @@ function ItemOpeningStockScreen({ onClose }: { onClose: () => void }): React.JSX
   const [draftLines, setDraftLines] = useState<DraftLine[]>([])
   const [selectedDraftLineNo, setSelectedDraftLineNo] = useState<number | null>(null)
   const [recordToDelete, setRecordToDelete] = useState<OpeningStockRecord | null>(null)
+  const [editingRecordId, setEditingRecordId] = useState<string | null>(null)
+  const [printRecords, setPrintRecords] = useState<OpeningStockRecord[] | null>(null)
+  const [autoPrintRecords, setAutoPrintRecords] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -432,8 +436,10 @@ function ItemOpeningStockScreen({ onClose }: { onClose: () => void }): React.JSX
     try {
       setSaving(true)
 
+      const savedRows: OpeningStockRecord[] = []
+
       for (const line of draftLines) {
-        await window.api.itemOpeningStock.create({
+        const saved = await window.api.itemOpeningStock.create({
           stockDate: line.stockDate,
           itemId: line.itemId,
           stampId: line.stampId,
@@ -451,11 +457,99 @@ function ItemOpeningStockScreen({ onClose }: { onClose: () => void }): React.JSX
           majuriRate: line.majuriRate,
           active: line.active
         })
+
+        savedRows.push(saved)
       }
 
       showAlert('success', 'Item opening stock saved successfully.')
       setDraftLines([])
       setSelectedDraftLineNo(null)
+      await loadData()
+
+      if (savedRows.length > 0) {
+        setAutoPrintRecords(true)
+        setPrintRecords(savedRows)
+      }
+    } catch (error) {
+      showAlert('error', getFriendlyErrorMessage(error))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleEditRecord = (record: OpeningStockRecord): void => {
+    setEditingRecordId(record.id)
+    setSelectedDraftLineNo(null)
+    setAlertMessage('')
+
+    setForm({
+      stockDate: record.stockDate,
+      metalType: normalizeMetal(record.metalType),
+      stampId: record.stampId,
+      itemId: record.itemId,
+      designId: record.designId,
+      pcs: String(record.pcs),
+      grossWeight: String(record.grossWeight),
+      lessWeight: String(record.lessWeight),
+      addWeight: String(record.addWeight),
+      tanch: String(record.tanch),
+      wastage: String(record.wastage),
+      unit: record.unit,
+      majuriRate: String(record.majuriRate),
+      barcode: record.barcode,
+      remark: record.remark,
+      active: record.active
+    })
+
+    window.setTimeout(() => {
+      itemSelectRef.current?.focus()
+    }, 0)
+  }
+
+  const cancelEditRecord = (): void => {
+    setEditingRecordId(null)
+    resetLineForm()
+  }
+
+  const updateSavedRecord = async (): Promise<void> => {
+    if (!editingRecordId) return
+
+    if (!form.itemId) {
+      showAlert('warning', 'Please select item name.')
+      itemSelectRef.current?.focus()
+      return
+    }
+
+    if (toNumber(form.grossWeight) <= 0) {
+      showAlert('warning', 'Please enter gross weight.')
+      return
+    }
+
+    try {
+      setSaving(true)
+
+      await window.api.itemOpeningStock.update(editingRecordId, {
+        stockDate: form.stockDate,
+        itemId: form.itemId,
+        stampId: form.stampId,
+        designId: form.designId,
+        barcode: form.barcode.trim(),
+        remark: form.remark.trim(),
+        pcs: toNumber(form.pcs),
+        grossWeight: toNumber(form.grossWeight),
+        lessWeight: toNumber(form.lessWeight),
+        addWeight: toNumber(form.addWeight),
+        tanch: toNumber(form.tanch),
+        wastage: toNumber(form.wastage),
+        hishob: preview.hishob,
+        unit: form.unit,
+        majuriRate: toNumber(form.majuriRate),
+        active: form.active
+      })
+
+      showAlert('success', 'Opening stock updated successfully.')
+      setEditingRecordId(null)
+      resetLineForm()
       await loadData()
     } catch (error) {
       showAlert('error', getFriendlyErrorMessage(error))
@@ -471,6 +565,10 @@ function ItemOpeningStockScreen({ onClose }: { onClose: () => void }): React.JSX
       setDeleting(true)
 
       await window.api.itemOpeningStock.remove(recordToDelete.id)
+
+      if (editingRecordId === recordToDelete.id) {
+        cancelEditRecord()
+      }
 
       showAlert('success', 'Opening stock deleted successfully.')
       setRecordToDelete(null)
@@ -652,17 +750,34 @@ function ItemOpeningStockScreen({ onClose }: { onClose: () => void }): React.JSX
                 <input value={formatNumber(preview.majuri)} readOnly />
               </div>
 
-              <button className="opening-add-btn" type="button" onClick={addDraftLine}>
-                Add
+              <button
+                className="opening-add-btn"
+                type="button"
+                onClick={editingRecordId ? () => void updateSavedRecord() : addDraftLine}
+                disabled={saving}
+              >
+                {editingRecordId ? (saving ? 'Updating...' : 'Update') : 'Add'}
               </button>
 
               <button
                 className="opening-remove-btn"
                 type="button"
                 onClick={removeSelectedDraftLine}
+                disabled={saving || Boolean(editingRecordId)}
               >
                 Remove
               </button>
+
+              {editingRecordId && (
+                <button
+                  className="opening-remove-btn"
+                  type="button"
+                  onClick={cancelEditRecord}
+                  disabled={saving}
+                >
+                  Cancel Edit
+                </button>
+              )}
             </div>
 
             <div className="opening-extra-grid">
@@ -878,7 +993,7 @@ function ItemOpeningStockScreen({ onClose }: { onClose: () => void }): React.JSX
                     </tr>
                   ) : (
                     filteredSavedRecords.map((record, index) => (
-                      <tr key={record.id}>
+                      <tr key={record.id} onDoubleClick={() => handleEditRecord(record)}>
                         <td>{index + 1}</td>
                         <td>{formatDate(record.stockDate)}</td>
                         <td>{record.itemName}</td>
@@ -895,13 +1010,38 @@ function ItemOpeningStockScreen({ onClose }: { onClose: () => void }): React.JSX
                         <td>{formatNumber(record.majuriRate)}</td>
                         <td>{formatNumber(record.majuri)}</td>
                         <td>
-                          <button
-                            className="btn-delete-small"
-                            type="button"
-                            onClick={() => setRecordToDelete(record)}
+                          <div
+                            className="sale-register-actions"
+                            onDoubleClick={(event) => event.stopPropagation()}
                           >
-                            Delete
-                          </button>
+                            <button
+                              className="table-edit"
+                              type="button"
+                              onClick={() => handleEditRecord(record)}
+                              disabled={saving || deleting}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="table-edit"
+                              type="button"
+                              onClick={() => {
+                                setAutoPrintRecords(false)
+                                setPrintRecords([record])
+                              }}
+                              disabled={saving || deleting}
+                            >
+                              Print
+                            </button>
+                            <button
+                              className="table-delete"
+                              type="button"
+                              onClick={() => setRecordToDelete(record)}
+                              disabled={saving || deleting}
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -937,6 +1077,14 @@ function ItemOpeningStockScreen({ onClose }: { onClose: () => void }): React.JSX
           }
         }}
       />
+
+      {printRecords && printRecords.length > 0 && (
+        <ItemOpeningStockPrintPreview
+          records={printRecords}
+          autoPrintOnOpen={autoPrintRecords}
+          onClose={() => setPrintRecords(null)}
+        />
+      )}
     </div>
   )
 }

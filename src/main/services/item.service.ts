@@ -36,6 +36,7 @@ type ItemRecord = {
   designName: string
   barcodeItem: boolean
   barcodeType: string
+  barcodeValue: string
   labourChargesBy: string
   salePurchaseBy: string
   gstHsnCode: string
@@ -61,6 +62,7 @@ type ItemRow = {
   design_name: string | null
   barcode_item: number
   barcode_type: string | null
+  barcode_value: string | null
   labour_charges_by: string
   sale_purchase_by: string
   gst_hsn_code: string | null
@@ -91,6 +93,7 @@ function mapRow(row: ItemRow): ItemRecord {
     designName: row.design_name ?? '',
     barcodeItem: Boolean(row.barcode_item),
     barcodeType: row.barcode_type ?? '',
+    barcodeValue: row.barcode_value ?? '',
     labourChargesBy: row.labour_charges_by,
     salePurchaseBy: row.sale_purchase_by,
     gstHsnCode: row.gst_hsn_code ?? '',
@@ -125,6 +128,28 @@ function assertActiveReference(tableName: string, id: string, errorMessage: stri
   }
 }
 
+function metalPrefix(metalType: string): string {
+  const firstChar = (metalType || '').trim().charAt(0).toUpperCase()
+  return firstChar || 'X'
+}
+
+function generateBarcodeValue(db: ReturnType<typeof getDatabase>, metalType: string): string {
+  const prefix = metalPrefix(metalType)
+
+  const totalRow = db.prepare(`SELECT COUNT(*) AS count FROM items`).get() as { count: number }
+  let sequence = Number(totalRow.count ?? 0) + 1
+
+  const existsStatement = db.prepare(`SELECT id FROM items WHERE barcode_value = ?`)
+
+  let candidate = `${prefix}${String(sequence).padStart(6, '0')}`
+  while (existsStatement.get(candidate)) {
+    sequence += 1
+    candidate = `${prefix}${String(sequence).padStart(6, '0')}`
+  }
+
+  return candidate
+}
+
 export const itemService = {
   list() {
     const db = getDatabase()
@@ -144,6 +169,7 @@ export const itemService = {
           idg.design_name,
           i.barcode_item,
           i.barcode_type,
+          i.barcode_value,
           i.labour_charges_by,
           i.sale_purchase_by,
           i.gst_hsn_code,
@@ -368,6 +394,7 @@ export const itemService = {
           idg.design_name,
           i.barcode_item,
           i.barcode_type,
+          i.barcode_value,
           i.labour_charges_by,
           i.sale_purchase_by,
           i.gst_hsn_code,
@@ -394,5 +421,73 @@ export const itemService = {
     }
 
     return mapRow(row)
+  },
+
+  assignBarcode(id: string) {
+    const db = getDatabase()
+
+    const existing = db
+      .prepare(
+        `
+        SELECT id, metal_type, barcode_value
+        FROM items
+        WHERE id = ?
+        AND deleted_at IS NULL
+      `
+      )
+      .get(id) as { id: string; metal_type: string; barcode_value: string | null } | undefined
+
+    if (!existing) {
+      throw new Error('Item not found')
+    }
+
+    if (existing.barcode_value) {
+      return this.getById(id)
+    }
+
+    const barcodeValue = generateBarcodeValue(db, existing.metal_type)
+    const now = dayjs().format('YYYY-MM-DD HH:mm:ss')
+
+    db.prepare(
+      `
+      UPDATE items
+      SET barcode_value = ?, updated_at = ?
+      WHERE id = ?
+    `
+    ).run(barcodeValue, now, id)
+
+    return this.getById(id)
+  },
+
+  regenerateBarcode(id: string) {
+    const db = getDatabase()
+
+    const existing = db
+      .prepare(
+        `
+        SELECT id, metal_type
+        FROM items
+        WHERE id = ?
+        AND deleted_at IS NULL
+      `
+      )
+      .get(id) as { id: string; metal_type: string } | undefined
+
+    if (!existing) {
+      throw new Error('Item not found')
+    }
+
+    const barcodeValue = generateBarcodeValue(db, existing.metal_type)
+    const now = dayjs().format('YYYY-MM-DD HH:mm:ss')
+
+    db.prepare(
+      `
+      UPDATE items
+      SET barcode_value = ?, updated_at = ?
+      WHERE id = ?
+    `
+    ).run(barcodeValue, now, id)
+
+    return this.getById(id)
   }
 }

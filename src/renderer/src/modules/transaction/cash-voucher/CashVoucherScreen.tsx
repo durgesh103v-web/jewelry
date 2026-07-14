@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import AppAlert from '../../../components/ui/AppAlert'
 import AppConfirmDialog from '../../../components/ui/AppConfirmDialog'
+import CashVoucherPrintPreview from './CashVoucherPrintPreview'
 import { getFriendlyErrorMessage } from '../../../utils/getFriendlyErrorMessage'
 
 type AlertType = 'success' | 'error' | 'warning'
@@ -59,6 +60,8 @@ function CashVoucherScreen({
   const [typeFilter, setTypeFilter] = useState<'ALL' | CashVoucherType>('ALL')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [printVoucher, setPrintVoucher] = useState<CashVoucherRecord | null>(null)
+  const [autoPrintVoucher, setAutoPrintVoucher] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [alertMessage, setAlertMessage] = useState('')
   const [alertType, setAlertType] = useState<AlertType>('success')
@@ -225,15 +228,15 @@ function CashVoucherScreen({
         ? 'Cash voucher updated successfully.'
         : 'Cash voucher saved successfully.'
 
-      if (editingId) {
-        await window.api.cashVoucher.update(editingId, payload)
-      } else {
-        await window.api.cashVoucher.create(payload)
-      }
+      const saved = editingId
+        ? await window.api.cashVoucher.update(editingId, payload)
+        : await window.api.cashVoucher.create(payload)
 
       await loadVouchers()
       handleNew()
       showAlert('success', successMessage)
+      setAutoPrintVoucher(true)
+      setPrintVoucher(saved)
     } catch (error) {
       showAlert('error', getFriendlyErrorMessage(error))
     } finally {
@@ -572,6 +575,17 @@ function CashVoucherScreen({
                                 >
                                   Delete
                                 </button>
+                                <button
+                                  className="table-edit"
+                                  type="button"
+                                  onClick={() => {
+                                    setAutoPrintVoucher(false)
+                                    setPrintVoucher(voucher)
+                                  }}
+                                  disabled={saving || deleting}
+                                >
+                                  Print
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -606,6 +620,14 @@ function CashVoucherScreen({
         onConfirm={() => void handleConfirmDelete()}
         onCancel={handleCancelDelete}
       />
+
+      {printVoucher && (
+        <CashVoucherPrintPreview
+          voucher={printVoucher}
+          autoPrintOnOpen={autoPrintVoucher}
+          onClose={() => setPrintVoucher(null)}
+        />
+      )}
     </div>
   )
 }

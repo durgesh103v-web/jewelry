@@ -33,6 +33,7 @@ type Item = {
   defaultWastage: number
   defaultLabourRate: number
   labourRateType: string
+  barcodeValue: string
   active: boolean
 }
 
@@ -196,6 +197,7 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
   const alertTimerRef = useRef<number | null>(null)
 
   const accountSelectRef = useRef<HTMLSelectElement | null>(null)
+  const barcodeInputRef = useRef<HTMLInputElement | null>(null)
   const itemSelectRef = useRef<HTMLSelectElement | null>(null)
   const pcsInputRef = useRef<HTMLInputElement | null>(null)
   const grossWeightInputRef = useRef<HTMLInputElement | null>(null)
@@ -446,6 +448,45 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
     window.setTimeout(() => {
       pcsInputRef.current?.focus()
     }, 0)
+  }
+
+  const handleBarcodeLookup = (): void => {
+    const scannedValue = itemForm.barcode.trim()
+
+    if (!scannedValue) return
+
+    const matchedItem = items.find(
+      (item) => item.barcodeValue && item.barcodeValue.toLowerCase() === scannedValue.toLowerCase()
+    )
+
+    if (!matchedItem) {
+      showAlert('warning', `No item found for barcode "${scannedValue}".`)
+      return
+    }
+
+    if (matchedItem.metalType !== header.metalType) {
+      showAlert(
+        'warning',
+        `Barcode belongs to a ${matchedItem.metalType} item. Switch Gold/Silver to select it.`
+      )
+      return
+    }
+
+    handleItemChange(matchedItem.id)
+
+    setItemForm((current) => ({
+      ...current,
+      barcode: scannedValue
+    }))
+
+    showAlert('success', `Item auto-filled from barcode: ${matchedItem.itemName}`)
+  }
+
+  const handleBarcodeKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
+    if (event.key !== 'Enter') return
+
+    event.preventDefault()
+    handleBarcodeLookup()
   }
 
   const clearItemForm = (): void => {
@@ -799,6 +840,22 @@ function SaleScreen({ onClose }: { onClose: () => void }): React.JSX.Element {
                       <option value="Gold">GOLD</option>
                       <option value="Silver">SILVER</option>
                     </select>
+                  </div>
+
+                  <div className="form-field">
+                    <label>Barcode</label>
+                    <input
+                      ref={barcodeInputRef}
+                      value={itemForm.barcode}
+                      onChange={(event) =>
+                        setItemForm((current) => ({
+                          ...current,
+                          barcode: event.target.value
+                        }))
+                      }
+                      onKeyDown={handleBarcodeKeyDown}
+                      placeholder="Scan / type barcode"
+                    />
                   </div>
 
                   <div className="form-field">

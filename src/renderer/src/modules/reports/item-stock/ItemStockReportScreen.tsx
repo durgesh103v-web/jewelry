@@ -113,7 +113,7 @@ function ItemStockReportScreen({ onClose }: { onClose: () => void }): React.JSX.
   return (
     <div className="item-stock-report-screen">
       <div className="item-stock-report-window">
-        <div className="form-title-bar">
+        <div className="form-title-bar no-print">
           <span>Item Stock</span>
 
           <button className="module-close-btn" type="button" onClick={onClose}>
@@ -122,9 +122,15 @@ function ItemStockReportScreen({ onClose }: { onClose: () => void }): React.JSX.
         </div>
 
         <div className="item-stock-report-body">
-          <AppAlert type={alertType} message={alertMessage} onClose={() => setAlertMessage('')} />
+          <div className="no-print">
+            <AppAlert
+              type={alertType}
+              message={alertMessage}
+              onClose={() => setAlertMessage('')}
+            />
+          </div>
 
-          <div className="item-stock-toolbar">
+          <div className="item-stock-toolbar no-print">
             <div className="form-field">
               <label htmlFor="item-stock-metal-filter">Metal</label>
               <select
@@ -170,10 +176,22 @@ function ItemStockReportScreen({ onClose }: { onClose: () => void }): React.JSX.
               Refresh
             </button>
 
+            <button className="btn-save" type="button" onClick={() => window.print()}>
+              Print
+            </button>
+
             <div className="record-summary">
               Records: <strong>{records.length}</strong> | Showing:{' '}
               <strong>{filteredRecords.length}</strong>
             </div>
+          </div>
+
+          <div className="item-stock-print-title">
+            <h2>Item Stock Report</h2>
+            <p>
+              Metal Filter: {metalFilter}
+              {searchText ? ` | Search Filter: ${searchText}` : ''}
+            </p>
           </div>
 
           <div className="item-stock-summary">
@@ -248,7 +266,7 @@ function ItemStockReportScreen({ onClose }: { onClose: () => void }): React.JSX.
             </table>
           </div>
 
-          <div className="screen-help-text">
+          <div className="screen-help-text no-print">
             Item Stock is calculated from Stock Ledger. Opening Stock adds quantity. Sale reduces
             quantity. Cancelled sale removes its stock effect.
           </div>

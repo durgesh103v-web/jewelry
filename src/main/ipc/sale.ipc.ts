@@ -22,7 +22,11 @@ export function registerSaleIpc(): void {
     return saleService.getById(id)
   })
 
-  ipcMain.handle('sales:cancel', (_event, id: string) => {
-    return saleService.cancel(id)
+  ipcMain.handle('sales:cancel', (_event, id: string, reason?: string) => {
+    return saleService.cancel(id, reason)
+  })
+
+  ipcMain.handle('sales:list-all-for-delete', () => {
+    return saleService.listAllForDelete()
   })
 }

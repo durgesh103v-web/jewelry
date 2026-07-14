@@ -33,13 +33,16 @@ function formatDate(value: string): string {
 
 function PurchasePrintPreview({
   purchase,
-  onClose
+  onClose,
+  autoPrintOnOpen = false
 }: {
   purchase: SavedPurchaseRecord
   onClose: () => void
+  autoPrintOnOpen?: boolean
 }): React.JSX.Element {
   const [firm, setFirm] = useState<FirmRecord | null>(null)
   const [printerSetting, setPrinterSetting] = useState<PrinterSettingPayload>(defaultPrinterSetting)
+  const [loadedSettings, setLoadedSettings] = useState(false)
 
   const header = purchase.header
   const itemLines = purchase.itemLines || []
@@ -80,6 +83,8 @@ function PurchasePrintPreview({
         } catch {
           setFirm(null)
           setPrinterSetting(defaultPrinterSetting)
+        } finally {
+          setLoadedSettings(true)
         }
       }
 
@@ -88,6 +93,16 @@ function PurchasePrintPreview({
 
     return () => window.clearTimeout(loadTimer)
   }, [])
+
+  useEffect(() => {
+    if (!loadedSettings || !autoPrintOnOpen || !printerSetting.autoPrintAfterSave) return
+
+    const printTimer = window.setTimeout(() => {
+      window.print()
+    }, 300)
+
+    return () => window.clearTimeout(printTimer)
+  }, [autoPrintOnOpen, loadedSettings, printerSetting.autoPrintAfterSave])
 
   return (
     <div className="print-preview-overlay">

@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import { getDatabase } from '../database/connection'
 
 type AccountOpeningRow = {
@@ -54,6 +55,39 @@ type LedgerSumRow = {
   anamat_nave: number
   anamat_jama: number
 }
+
+type LastLedgerEntryRow = {
+  account_id: string
+  last_entry_date: string
+}
+
+type AccountBalanceListRecord = {
+  id: string
+  accountName: string
+  otherName: string
+  mobileNumber: string
+  city: string
+  groupName: string
+  openingGoldFine: number
+  openingSilverFine: number
+  openingCash: number
+  openingAnamat: number
+  openingBank: number
+  goldFine: number
+  silverFine: number
+  cash: number
+  anamat: number
+  bank: number
+}
+
+type OutstandingRecord = AccountBalanceListRecord & {
+  status: 'RECEIVABLE' | 'PAYABLE'
+  sortValue: number
+  lastTransactionDate: string | null
+  daysSinceLastTransaction: number | null
+}
+
+const OUTSTANDING_EPSILON = 0.0005
 
 export const accountBalanceService = {
   getAccountBalance(accountId: string) {
@@ -174,7 +208,104 @@ export const accountBalanceService = {
     })
   },
 
-  getAccountLedgerDetails(accountId: string) {
+  /**
+   * Outstanding report — built on top of listAccountBalances(). Keeps only accounts with a
+   * non-zero balance in any of gold fine / silver fine / cash / anamat / bank, and splits them
+   * into Receivable (party owes the firm) vs Payable (firm owes the party).
+   *
+   * Sign convention (see getAccountBalance above): balance = opening + nave - jama.
+   * Sale/Purchase-payment-received entries post to "nave" (debit) which raises the balance,
+   * so a positive balance means the party owes the firm (Receivable). Purchase/Sale-payment-made
+   * entries post to "jama" (credit) which lowers the balance, so a negative balance means the
+   * firm owes the party (Payable).
+   *
+   * Since gold/silver fine (weight) and cash/anamat/bank (currency) are different units, an
+   * account is classified by whichever of its five balance fields has the largest magnitude
+   * (its "dominant" balance), and rows are sorted by the sum of absolute values across all five
+   * fields — a simple magnitude proxy, not a true cross-unit total.
+   */
+  getOutstandingBalances() {
+    const db = getDatabase()
+
+    const balances = this.listAccountBalances() as AccountBalanceListRecord[]
+
+    const lastEntryRows = db
+      .prepare(
+        `
+        SELECT
+          account_id,
+          MAX(entry_date) AS last_entry_date
+        FROM account_ledger
+        GROUP BY account_id
+      `
+      )
+      .all() as LastLedgerEntryRow[]
+
+    const lastEntryByAccountId = new Map(
+      lastEntryRows.map((row) => [row.account_id, row.last_entry_date])
+    )
+
+    const today = dayjs()
+
+    const outstanding = balances.reduce<OutstandingRecord[]>((list, account) => {
+      const fields = [account.goldFine, account.silverFine, account.cash, account.anamat, account.bank]
+      const hasOutstanding = fields.some((value) => Math.abs(value) > OUTSTANDING_EPSILON)
+
+      if (!hasOutstanding) {
+        return list
+      }
+
+      const dominant = fields.reduce(
+        (max, value) => (Math.abs(value) > Math.abs(max) ? value : max),
+        0
+      )
+      const sortValue = fields.reduce((sum, value) => sum + Math.abs(value), 0)
+      const lastTransactionDate = lastEntryByAccountId.get(account.id) ?? null
+      const daysSinceLastTransaction = lastTransactionDate
+        ? Math.max(0, today.diff(dayjs(lastTransactionDate), 'day'))
+        : null
+
+      list.push({
+        ...account,
+        status: dominant >= 0 ? 'RECEIVABLE' : 'PAYABLE',
+        sortValue,
+        lastTransactionDate,
+        daysSinceLastTransaction
+      })
+
+      return list
+    }, [])
+
+    outstanding.sort((a, b) => b.sortValue - a.sortValue)
+
+    const receivable = outstanding.filter((account) => account.status === 'RECEIVABLE')
+    const payable = outstanding.filter((account) => account.status === 'PAYABLE')
+
+    const sumTotals = (list: OutstandingRecord[]) =>
+      list.reduce(
+        (total, account) => {
+          total.goldFine += account.goldFine
+          total.silverFine += account.silverFine
+          total.cash += account.cash
+          total.anamat += account.anamat
+          total.bank += account.bank
+          return total
+        },
+        { goldFine: 0, silverFine: 0, cash: 0, anamat: 0, bank: 0 }
+      )
+
+    return {
+      receivable,
+      payable,
+      receivableTotals: sumTotals(receivable),
+      payableTotals: sumTotals(payable)
+    }
+  },
+
+  getAccountLedgerDetails(
+    accountId: string,
+    filter?: { fromDate?: string; toDate?: string }
+  ) {
     const db = getDatabase()
 
     const account = db
@@ -204,9 +335,7 @@ export const accountBalanceService = {
       throw new Error('Account not found')
     }
 
-    const ledgerRows = db
-      .prepare(
-        `
+    const ledgerQueryBase = `
         SELECT
           al.id,
           al.source_type,
@@ -223,22 +352,73 @@ export const accountBalanceService = {
           al.anamat_nave,
           al.narration,
           al.created_at,
-          COALESCE(sh.sale_no, ph.purchase_no, cv.voucher_no, '') AS bill_no
+          COALESCE(sh.sale_no, ph.purchase_no, srh.return_no, prh.return_no, cv.voucher_no, '') AS bill_no
         FROM account_ledger al
         LEFT JOIN sale_headers sh ON sh.id = al.source_id AND al.source_type IN ('SALE', 'SALE_PAYMENT')
         LEFT JOIN purchase_headers ph ON ph.id = al.source_id AND al.source_type IN ('PURCHASE', 'PURCHASE_PAYMENT')
+        LEFT JOIN sale_return_headers srh ON srh.id = al.source_id AND al.source_type = 'SALE_RETURN'
+        LEFT JOIN purchase_return_headers prh ON prh.id = al.source_id AND al.source_type = 'PURCHASE_RETURN'
         LEFT JOIN cash_vouchers cv ON cv.id = al.source_id AND al.source_type IN ('CASH_RECEIPT', 'CASH_PAYMENT')
-        WHERE al.account_id = ?
-        ORDER BY al.entry_date ASC, al.created_at ASC
       `
-      )
-      .all(accountId) as AccountLedgerRow[]
+
+    const fromDate = filter?.fromDate || ''
+    const toDate = filter?.toDate || ''
 
     let runningGoldFine = Number(account.opening_gold_fine ?? 0)
     let runningSilverFine = Number(account.opening_silver_fine ?? 0)
     let runningCash = Number(account.opening_cash ?? 0)
     let runningBank = Number(account.opening_bank ?? 0)
     let runningAnamat = Number(account.opening_anamat ?? 0)
+
+    if (fromDate) {
+      const priorRows = db
+        .prepare(`${ledgerQueryBase} WHERE al.account_id = ? AND al.entry_date < ?`)
+        .all(accountId, fromDate) as AccountLedgerRow[]
+
+      for (const row of priorRows) {
+        const fineJama = Number(row.fine_jama ?? 0)
+        const fineNave = Number(row.fine_nave ?? 0)
+
+        if (row.metal_type === 'Gold') {
+          runningGoldFine = runningGoldFine + fineNave - fineJama
+        }
+
+        if (row.metal_type === 'Silver') {
+          runningSilverFine = runningSilverFine + fineNave - fineJama
+        }
+
+        runningCash = runningCash + Number(row.cash_nave ?? 0) - Number(row.cash_jama ?? 0)
+        runningBank = runningBank + Number(row.bank_nave ?? 0) - Number(row.bank_jama ?? 0)
+        runningAnamat = runningAnamat + Number(row.anamat_nave ?? 0) - Number(row.anamat_jama ?? 0)
+      }
+    }
+
+    const periodOpeningBalance = {
+      goldFine: runningGoldFine,
+      silverFine: runningSilverFine,
+      cash: runningCash,
+      anamat: runningAnamat,
+      bank: runningBank
+    }
+
+    const conditions = ['al.account_id = ?']
+    const params: string[] = [accountId]
+
+    if (fromDate) {
+      conditions.push('al.entry_date >= ?')
+      params.push(fromDate)
+    }
+
+    if (toDate) {
+      conditions.push('al.entry_date <= ?')
+      params.push(toDate)
+    }
+
+    const ledgerRows = db
+      .prepare(
+        `${ledgerQueryBase} WHERE ${conditions.join(' AND ')} ORDER BY al.entry_date ASC, al.created_at ASC`
+      )
+      .all(...params) as AccountLedgerRow[]
 
     const rows = ledgerRows.map((row, index) => {
       const fineJama = Number(row.fine_jama ?? 0)
@@ -305,6 +485,7 @@ export const accountBalanceService = {
         anamat: Number(account.opening_anamat ?? 0),
         bank: Number(account.opening_bank ?? 0)
       },
+      periodOpeningBalance,
       rows,
       closingBalance: {
         goldFine: runningGoldFine,

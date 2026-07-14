@@ -10,13 +10,32 @@ import { registerItemDesignIpc } from './ipc/itemDesign.ipc'
 import { registerItemIpc } from './ipc/item.ipc'
 import { registerItemOpeningStockIpc } from './ipc/itemOpeningStock.ipc'
 import { registerSaleIpc } from './ipc/sale.ipc'
+import { registerApprovalIpc } from './ipc/approval.ipc'
+import { registerEstimateIpc } from './ipc/estimate.ipc'
 import { registerPurchaseIpc } from './ipc/purchase.ipc'
+import { registerPurchaseReturnIpc } from './ipc/purchaseReturn.ipc'
+import { registerSaleReturnIpc } from './ipc/saleReturn.ipc'
 import { registerReportIpc } from './ipc/report.ipc'
+import { registerGstReportIpc } from './ipc/gstReport.ipc'
+import { registerFineReportIpc } from './ipc/fineReport.ipc'
+import { registerDailyReportIpc } from './ipc/dailyReport.ipc'
 import { registerBackupIpc } from './ipc/backup.ipc'
 import { registerFirmIpc } from './ipc/firm.ipc'
 import { registerPrinterSettingIpc } from './ipc/printerSetting.ipc'
 import { registerCashVoucherIpc } from './ipc/cashVoucher.ipc'
 import { registerCashFineOpeningIpc } from './ipc/cashFineOpening.ipc'
+import { registerJobWorkIpc } from './ipc/jobWork.ipc'
+import { registerRepairEntryIpc } from './ipc/repairEntry.ipc'
+import { registerTransferIpc } from './ipc/transfer.ipc'
+import { registerUserIpc } from './ipc/user.ipc'
+import { registerFinancialYearIpc } from './ipc/financialYear.ipc'
+import { registerWeightScanIpc } from './ipc/weightScan.ipc'
+import { registerSaudaIpc } from './ipc/sauda.ipc'
+import { registerOrderPayalIpc } from './ipc/orderPayal.ipc'
+import { registerSettlementIpc } from './ipc/settlement.ipc'
+import { registerReminderIpc } from './ipc/reminder.ipc'
+import { registerWhatsAppIpc } from './ipc/whatsapp.ipc'
+import { registerScreenshotIpc } from './ipc/screenshot.ipc'
 
 function createWindow(): void {
   // Create the browser window.
@@ -80,13 +99,32 @@ app.whenReady().then(() => {
   registerItemIpc()
   registerItemOpeningStockIpc()
   registerSaleIpc()
+  registerApprovalIpc()
+  registerEstimateIpc()
   registerPurchaseIpc()
+  registerPurchaseReturnIpc()
+  registerSaleReturnIpc()
   registerReportIpc()
+  registerGstReportIpc()
+  registerFineReportIpc()
+  registerDailyReportIpc()
   registerBackupIpc()
   registerFirmIpc()
   registerPrinterSettingIpc()
   registerCashVoucherIpc()
   registerCashFineOpeningIpc()
+  registerJobWorkIpc()
+  registerRepairEntryIpc()
+  registerTransferIpc()
+  registerWeightScanIpc()
+  registerSaudaIpc()
+  registerOrderPayalIpc()
+  registerSettlementIpc()
+  registerUserIpc()
+  registerFinancialYearIpc()
+  registerReminderIpc()
+  registerWhatsAppIpc()
+  registerScreenshotIpc()
 
   createWindow()
 
