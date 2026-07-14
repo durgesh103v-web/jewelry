@@ -169,10 +169,6 @@ function App(): React.JSX.Element {
 
   return (
     <div className="app">
-      <header className="title-strip">
-        <div>Jewellery - Code : User : 1 Counter No. : 2 &nbsp; 06/02/2026</div>
-      </header>
-
       <div className="top-bar">
         <nav className="menu-bar" aria-label="Application menu">
           {appMenus.map((menu) => (
