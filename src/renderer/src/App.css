@@ -5684,4 +5684,206 @@ textarea:focus {
   flex-shrink: 0;
 }
 
-.screenshot-summary-card 
+.screenshot-summary-card {
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.screenshot-summary-card span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.screenshot-summary-card strong {
+  font-size: 20px;
+  color: var(--color-text);
+}
+
+.screenshot-hint-card {
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.screenshot-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.screenshot-toolbar-actions button {
+  height: 100%;
+  min-width: 92px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.screenshot-table-panel th.screenshot-action-col,
+.screenshot-table-panel td.screenshot-action-col {
+  width: 70px;
+  text-align: center;
+}
+
+.screenshot-view-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.screenshot-view-btn:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg-subtle);
+}
+
+.screenshot-preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  z-index: 20100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.screenshot-preview-dialog {
+  width: min(880px, 92vw);
+  max-height: 90vh;
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.screenshot-preview-toolbar {
+  height: 44px;
+  flex-shrink: 0;
+  background: var(--color-primary);
+  color: white;
+  padding: 0 8px 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.screenshot-preview-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  overflow: hidden;
+}
+
+.screenshot-preview-meta strong {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.screenshot-preview-meta span {
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.screenshot-preview-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-subtle);
+}
+
+.screenshot-preview-body img {
+  max-width: 100%;
+  max-height: 78vh;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  background: white;
+}
+
+.screenshot-preview-loading {
+  padding: 40px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+/* Settings hub */
+.settings-window {
+  width: 100%;
+}
+
+.settings-intro {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: #33475b;
+}
+
+.settings-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.settings-tile {
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.settings-tile:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(13, 79, 122, 0.18);
+}
+
+.settings-tile-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.settings-tile strong {
+  font-size: 15px;
+  color: var(--color-primary);
+}
+
+.settings-tile small {
+  font-size: 12px;
+  color: #52606d;
+  line-height: 1.4;
+}
