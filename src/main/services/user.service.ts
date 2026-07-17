@@ -35,7 +35,7 @@ type UserRow = {
   updated_at: string
 }
 
-function hashPassword(password: string): string {
+export function hashPassword(password: string): string {
   const salt = randomBytes(16).toString('hex')
   const derived = scryptSync(password, salt, 64).toString('hex')
   return `${salt}:${derived}`

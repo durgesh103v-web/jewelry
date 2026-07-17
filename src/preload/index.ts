@@ -1,6 +1,39 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
+type BusinessType = 'WHOLESALE' | 'RETAIL'
+
+type AuthState = {
+  registered: boolean
+  username: string | null
+  businessType: BusinessType | null
+  authenticated: boolean
+}
+
+type AuthSession = {
+  userId: string
+  username: string
+  role: string
+  businessType: BusinessType
+}
+
+type RegisterPayload = {
+  username: string
+  password: string
+  firmName: string
+  businessType: BusinessType
+}
+
+type LoginPayload = {
+  username: string
+  password: string
+}
+
+type ChangePasswordPayload = {
+  currentPassword: string
+  newPassword: string
+}
+
 type AccountGroupPayload = {
   groupName: string
   groupType: string
@@ -1768,6 +1801,21 @@ type JobWorkRegisterRecord = {
 }
 
 const api = {
+  auth: {
+    getState: (): Promise<AuthState> => ipcRenderer.invoke('auth:get-state'),
+
+    register: (payload: RegisterPayload): Promise<AuthSession> =>
+      ipcRenderer.invoke('auth:register', payload),
+
+    login: (payload: LoginPayload): Promise<AuthSession> =>
+      ipcRenderer.invoke('auth:login', payload),
+
+    logout: (): Promise<{ success: boolean }> => ipcRenderer.invoke('auth:logout'),
+
+    changePassword: (payload: ChangePasswordPayload): Promise<{ success: boolean }> =>
+      ipcRenderer.invoke('auth:change-password', payload)
+  },
+
   accountGroups: {
     list: () => ipcRenderer.invoke('account-groups:list'),
 

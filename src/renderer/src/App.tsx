@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
-import { appMenus } from './config/appMenus'
+import { getMenusForBusinessType, getVisibleScreenIds } from './config/appMenus'
 import AppAlert from './components/ui/AppAlert'
 import { getFriendlyErrorMessage } from './utils/getFriendlyErrorMessage'
 import AccountGroupScreen from './modules/master/account-group/AccountGroupScreen'
@@ -51,7 +51,7 @@ import FineMarginReportScreen from './modules/reports/fine-margin/FineMarginRepo
 import DailySummaryReportScreen from './modules/reports/daily-summary/DailySummaryReportScreen'
 import BackupRestoreScreen from './modules/utility/backup-restore/BackupRestoreScreen'
 import PrinterSettingScreen from './modules/utility/printer-setting/PrinterSettingScreen'
-import UserManagementScreen from './modules/utility/user-management/UserManagementScreen'
+import ChangePasswordScreen from './modules/utility/change-password/ChangePasswordScreen'
 import FinancialYearScreen from './modules/utility/financial-year/FinancialYearScreen'
 import BarcodePrintingScreen from './modules/utility/barcode-printing/BarcodePrintingScreen'
 import DeleteSaleBillsScreen from './modules/utility/delete-sale-bills/DeleteSaleBillsScreen'
@@ -80,7 +80,15 @@ function formatTopBarDateTime(value: string): string {
   return `${day}/${month}/${year}${shortTime ? ` ${shortTime}` : ''}`
 }
 
-function App(): React.JSX.Element {
+type AppProps = {
+  session: AuthSession
+  onLogout: () => void
+}
+
+function App({ session, onLogout }: AppProps): React.JSX.Element {
+  const businessType = session.businessType
+  const visibleMenus = useMemo(() => getMenusForBusinessType(businessType), [businessType])
+  const visibleScreenIds = useMemo(() => getVisibleScreenIds(businessType), [businessType])
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [tabs, setTabs] = useState<WorkspaceTab[]>([dashboardTab])
   const [activeTabId, setActiveTabId] = useState('dashboard')
@@ -130,6 +138,12 @@ function App(): React.JSX.Element {
   }, [loadTopBarInfo])
 
   const openScreen = (screen: AppMenuChild): void => {
+    // Never open a screen the current business type isn't allowed to see, even
+    // if something tries to navigate there programmatically.
+    if (screen.id !== 'dashboard' && !visibleScreenIds.has(screen.id)) {
+      return
+    }
+
     setTabs((currentTabs) => {
       const alreadyOpen = currentTabs.some((tab) => tab.id === screen.id)
 
@@ -211,7 +225,7 @@ function App(): React.JSX.Element {
     <div className="app">
       <div className="top-bar">
         <nav className="menu-bar" aria-label="Application menu">
-          {appMenus.map((menu) => (
+          {visibleMenus.map((menu) => (
             <div
               key={menu.id}
               className="menu-item"
@@ -277,6 +291,37 @@ function App(): React.JSX.Element {
           >
             &#128994; WhatsApp
           </button>
+
+          <span
+            title={`Business type: ${businessType === 'WHOLESALE' ? 'Wholesaler' : 'Retailer'}`}
+            style={{
+              marginLeft: '10px',
+              fontSize: '13px',
+              fontWeight: 600,
+              color: '#1b2a4a',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            &#128100; {session.username}
+          </span>
+          <button
+            type="button"
+            onClick={onLogout}
+            title="Log out"
+            style={{
+              marginLeft: '8px',
+              padding: '6px 14px',
+              fontSize: '13px',
+              fontWeight: 600,
+              color: '#ffffff',
+              background: '#c0392b',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            Logout
+          </button>
         </div>
       </div>
 
@@ -292,7 +337,7 @@ function App(): React.JSX.Element {
 
       <main className="workspace">
         {activeTab.id === 'dashboard' ? (
-          <Dashboard openQuickScreen={openQuickScreen} />
+          <Dashboard openQuickScreen={openQuickScreen} visibleScreenIds={visibleScreenIds} />
         ) : activeTab.id === 'account-group' ? (
           <AccountGroupScreen onClose={() => closeTab(activeTab.id)} />
         ) : activeTab.id === 'account-master' ? (
@@ -403,8 +448,8 @@ function App(): React.JSX.Element {
           <PrinterSettingScreen onClose={() => closeTab(activeTab.id)} />
         ) : activeTab.id === 'barcode-printing' ? (
           <BarcodePrintingScreen onClose={() => closeTab(activeTab.id)} />
-        ) : activeTab.id === 'user-management' ? (
-          <UserManagementScreen onClose={() => closeTab(activeTab.id)} />
+        ) : activeTab.id === 'change-password' ? (
+          <ChangePasswordScreen onClose={() => closeTab(activeTab.id)} />
         ) : activeTab.id === 'financial-year' ? (
           <FinancialYearScreen onClose={() => closeTab(activeTab.id)} />
         ) : activeTab.id === 'delete-sale-bills' ? (
@@ -527,9 +572,11 @@ const quickActionItems: Array<{
 ]
 
 function Dashboard({
-  openQuickScreen
+  openQuickScreen,
+  visibleScreenIds
 }: {
   openQuickScreen: (id: string, label: string, module: AppMenuChild['module']) => void
+  visibleScreenIds: Set<string>
 }): React.JSX.Element {
   const [dailySummary, setDailySummary] = useState<DailySummaryResult>(emptyDailySummary)
   const [outstanding, setOutstanding] = useState<OutstandingReportResult | null>(null)
@@ -566,10 +613,11 @@ function Dashboard({
   )
 
   const filteredQuickActions = useMemo(() => {
+    const allowed = quickActionItems.filter((item) => visibleScreenIds.has(item.id))
     const term = searchTerm.trim().toLowerCase()
-    if (!term) return quickActionItems
-    return quickActionItems.filter((item) => item.label.toLowerCase().includes(term))
-  }, [searchTerm])
+    if (!term) return allowed
+    return allowed.filter((item) => item.label.toLowerCase().includes(term))
+  }, [searchTerm, visibleScreenIds])
 
   return (
     <div className="dashboard">

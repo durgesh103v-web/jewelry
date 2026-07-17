@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -36,6 +36,22 @@ import { registerSettlementIpc } from './ipc/settlement.ipc'
 import { registerReminderIpc } from './ipc/reminder.ipc'
 import { registerWhatsAppIpc } from './ipc/whatsapp.ipc'
 import { registerScreenshotIpc } from './ipc/screenshot.ipc'
+import { registerAuthIpc } from './ipc/auth.ipc'
+
+// Only these URL schemes may be handed to the OS browser. Blocks file:// and
+// custom-scheme links that could otherwise be launched via window.open.
+const ALLOWED_EXTERNAL_SCHEMES = new Set(['https:', 'http:', 'mailto:', 'tel:'])
+
+function openExternalIfSafe(url: string): void {
+  try {
+    const { protocol } = new URL(url)
+    if (ALLOWED_EXTERNAL_SCHEMES.has(protocol)) {
+      void shell.openExternal(url)
+    }
+  } catch {
+    // Ignore malformed URLs.
+  }
+}
 
 function createWindow(): void {
   // Create the browser window.
@@ -61,8 +77,25 @@ function createWindow(): void {
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
+    openExternalIfSafe(details.url)
     return { action: 'deny' }
+  })
+
+  // Lock navigation to the app itself. Any attempt to navigate the window to a
+  // remote origin (e.g. an injected link) is blocked and, if it's a safe web
+  // link, handed to the OS browser instead. Defence-in-depth on top of the CSP.
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    const isDevServer =
+      is.dev &&
+      process.env['ELECTRON_RENDERER_URL'] &&
+      url.startsWith(process.env['ELECTRON_RENDERER_URL'])
+
+    if (url.startsWith('file://') || isDevServer) {
+      return
+    }
+
+    event.preventDefault()
+    openExternalIfSafe(url)
   })
 
   // HMR for renderer base on electron-vite cli.
@@ -88,9 +121,7 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
+  registerAuthIpc()
   registerAccountGroupIpc()
   registerAccountIpc()
   registerItemGroupIpc()

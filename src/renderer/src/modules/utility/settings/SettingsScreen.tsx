@@ -27,9 +27,9 @@ const settingsTiles: SettingsTileDefinition[] = [
     icon: '\u{1F4BE}'
   },
   {
-    id: 'user-management',
-    label: 'User Management',
-    description: 'Manage application users, roles and access.',
+    id: 'change-password',
+    label: 'Change Password',
+    description: 'Update the password for your login.',
     icon: '\u{1F464}'
   },
   {
